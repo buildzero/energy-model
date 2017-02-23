@@ -24,7 +24,7 @@ export function heatFlowRates(conditions, settings) {
 
     // the parasitic lighting load is given to us annually as kWh/m2/yr
     // so we need to convert that into W/m2 to match everything else
-    let parasitic_lighting_load = (settings.annual_parasitic_load*1000/8760);
+    let parasitic_lighting_load = settings.incl_parasitic_lighting ? (settings.annual_parasitic_load*1000/8760) : 0.0;
 
     // calculate all the individual rates for both weekdays and weekends
     let output = {

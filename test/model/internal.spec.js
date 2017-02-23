@@ -47,6 +47,7 @@ describe("Internal Gains", function() {
         daylighting_factor: 1,
         lighting_occupancy_factor: 1,
         constant_illumination_factor: 1,
+        incl_parasitic_lighting: true,
         annual_parasitic_load: 6
     };
 
@@ -64,6 +65,22 @@ describe("Internal Gains", function() {
             lighting_rate_we: 10.68,
             total_rate_we: 25.08,
             gains_we: 8429
+        });
+    });
+
+    it("ignores parasitic lighting when that is disabled", function() {
+        settings.incl_parasitic_lighting = false;
+        expect(roundOutputs(heatFlowRates(conditions, settings))).toEqual({
+            occupancy_rate_wd: 0.44,
+            appliance_rate_wd: 1,
+            lighting_rate_wd: 1,
+            total_rate_wd: 2.44,
+            gains_wd: 820,
+            occupancy_rate_we: 4.4,
+            appliance_rate_we: 10,
+            lighting_rate_we: 10,
+            total_rate_we: 24.4,
+            gains_we: 8198
         });
     });
 });

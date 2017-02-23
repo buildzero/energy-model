@@ -27,6 +27,7 @@ export let buildingSettings = {
     daylighting_factor: 1,
     lighting_occupancy_factor: 1,
     constant_illumination_factor: 1,
+    incl_parasitic_lighting: true,
     annual_parasitic_load: 6
 };
 
