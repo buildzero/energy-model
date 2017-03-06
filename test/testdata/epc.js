@@ -1,22 +1,103 @@
 
-// RESULTS
+//=======   RESULTS   =========
+
+// TRANSMISSION HEAT TRANSFER
+export let heatTransferCoeffiecient = 414.76;
+
+
+// INTERNAL GAINS
+let internalGainsDetailed = [
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    },
+    {
+        weekday: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 8429, 1050, 1050, 1050, 1050, 1050, 1050],
+        weekend: [1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050, 1050]
+    }
+];
+
 export let internalGains = [
-    {occupancy_rate: 541, appliance_rate: 1230, lighting_rate: 1460, total_rate: 3232, occupancy: 1450, appliance: 3295, lighting: 3911, total: 8656},
-    {occupancy_rate: 544, appliance_rate: 1236, lighting_rate: 1466, total_rate: 3246, occupancy: 1316, appliance: 2990, lighting: 3547, total: 7853},
-    {occupancy_rate: 559, appliance_rate: 1271, lighting_rate: 1501, total_rate: 3331, occupancy: 1498, appliance: 3404, lighting: 4020, total: 8922},
-    {occupancy_rate: 517, appliance_rate: 1176, lighting_rate: 1406, total_rate: 3100, occupancy: 1341, appliance: 3048, lighting: 3645, total: 8034},
-    {occupancy_rate: 559, appliance_rate: 1271, lighting_rate: 1501, total_rate: 3331, occupancy: 1498, appliance: 3404, lighting: 4020, total: 8922},
-    {occupancy_rate: 554, appliance_rate: 1260, lighting_rate: 1490, total_rate: 3305, occupancy: 1437, appliance: 3266, lighting: 3862, total: 8565},
-    {occupancy_rate: 523, appliance_rate: 1190, lighting_rate: 1420, total_rate: 3133, occupancy: 1402, appliance: 3186, lighting: 3802, total: 8390},
-    {occupancy_rate: 559, appliance_rate: 1271, lighting_rate: 1501, total_rate: 3331, occupancy: 1498, appliance: 3404, lighting: 4020, total: 8922},
-    {occupancy_rate: 536, appliance_rate: 1218, lighting_rate: 1448, total_rate: 3202, occupancy: 1389, appliance: 3157, lighting: 3754, total: 8300},
-    {occupancy_rate: 541, appliance_rate: 1230, lighting_rate: 1460, total_rate: 3232, occupancy: 1450, appliance: 3295, lighting: 3911, total: 8656},
-    {occupancy_rate: 554, appliance_rate: 1260, lighting_rate: 1490, total_rate: 3305, occupancy: 1437, appliance: 3266, lighting: 3862, total: 8565},
-    {occupancy_rate: 523, appliance_rate: 1190, lighting_rate: 1420, total_rate: 3133, occupancy: 1402, appliance: 3186, lighting: 3802, total: 8390}
+    {occupancy_rate: 541, appliance_rate: 1230, lighting_rate: 1460, total_rate: 3232, occupancy: 1450, appliance: 3295, lighting: 3911, total: 8656, detailed: internalGainsDetailed[0]},
+    {occupancy_rate: 544, appliance_rate: 1236, lighting_rate: 1466, total_rate: 3246, occupancy: 1316, appliance: 2990, lighting: 3547, total: 7853, detailed: internalGainsDetailed[1]},
+    {occupancy_rate: 559, appliance_rate: 1271, lighting_rate: 1501, total_rate: 3331, occupancy: 1498, appliance: 3404, lighting: 4020, total: 8922, detailed: internalGainsDetailed[2]},
+    {occupancy_rate: 517, appliance_rate: 1176, lighting_rate: 1406, total_rate: 3100, occupancy: 1341, appliance: 3048, lighting: 3645, total: 8034, detailed: internalGainsDetailed[3]},
+    {occupancy_rate: 559, appliance_rate: 1271, lighting_rate: 1501, total_rate: 3331, occupancy: 1498, appliance: 3404, lighting: 4020, total: 8922, detailed: internalGainsDetailed[4]},
+    {occupancy_rate: 554, appliance_rate: 1260, lighting_rate: 1490, total_rate: 3305, occupancy: 1437, appliance: 3266, lighting: 3862, total: 8565, detailed: internalGainsDetailed[5]},
+    {occupancy_rate: 523, appliance_rate: 1190, lighting_rate: 1420, total_rate: 3133, occupancy: 1402, appliance: 3186, lighting: 3802, total: 8390, detailed: internalGainsDetailed[6]},
+    {occupancy_rate: 559, appliance_rate: 1271, lighting_rate: 1501, total_rate: 3331, occupancy: 1498, appliance: 3404, lighting: 4020, total: 8922, detailed: internalGainsDetailed[7]},
+    {occupancy_rate: 536, appliance_rate: 1218, lighting_rate: 1448, total_rate: 3202, occupancy: 1389, appliance: 3157, lighting: 3754, total: 8300, detailed: internalGainsDetailed[8]},
+    {occupancy_rate: 541, appliance_rate: 1230, lighting_rate: 1460, total_rate: 3232, occupancy: 1450, appliance: 3295, lighting: 3911, total: 8656, detailed: internalGainsDetailed[9]},
+    {occupancy_rate: 554, appliance_rate: 1260, lighting_rate: 1490, total_rate: 3305, occupancy: 1437, appliance: 3266, lighting: 3862, total: 8565, detailed: internalGainsDetailed[10]},
+    {occupancy_rate: 523, appliance_rate: 1190, lighting_rate: 1420, total_rate: 3133, occupancy: 1402, appliance: 3186, lighting: 3802, total: 8390, detailed: internalGainsDetailed[11]}
 ];
 
 
-// INPUTS
+// SOLAR GAINS
+let solarGainsDetailed = [
+    [0, 0, 0, 0, 0, 0, 0, 276, 2343, 6633, 10227, 13953, 14897, 13973, 12181, 8827, 4893, 1244, 5, 0, 0, 0, 0, 0]
+];
+
+// NOTE: we diverge from the EPC data here because I believe they have some rounding errors in their sheet
+export let solarGains = [
+    {
+        detailed: solarGainsDetailed[0],
+        walls: [{ id: 'wall1', heatFlowRate: 89, gain: 240 }, { id: 'wall2', heatFlowRate: 9, gain: 25 }, { id: 'wall3', heatFlowRate: -8, gain: -23 }, { id: 'wall4', heatFlowRate: 18, gain: 48 }, { id: 'roof', heatFlowRate: 30, gain: 81 }],
+        windows: [{ id: 'win1', heatFlowRate: 2233, gain: 5980 }, { id: 'win2', heatFlowRate: 447, gain: 1198 }, { id: 'win3', heatFlowRate: 293, gain: 785 }, { id: 'win4', heatFlowRate: 615, gain: 1648 }],
+        total_rate: 3727,
+        total: 9983
+    }
+];
+
+
+// TOTAL GAINS
+// export let totalGainsDetailed = [
+//
+// ];
+
+
+//=========   INPUTS   ==========
+
 export let buildingSettings = {
     floor_area: 336,              // m2
     occupants: 17,                // people
@@ -32,7 +113,7 @@ export let buildingSettings = {
 };
 
 // weekday and weekend usage factors for each hour of a representative day
-export let dailyUsage = [
+export let hourlyConditions = [
     {wd_heat_point: 16.0, wd_cool_point: 29.0, we_heat_point: 16.0, we_cool_point: 29.0, wd_occupancy: 0.10, wd_appliance: 0.10, wd_lighting: 0.10, we_occupancy: 0.10,  we_appliance: 0.10,  we_lighting: 0.10},
     {wd_heat_point: 16.0, wd_cool_point: 29.0, we_heat_point: 16.0, we_cool_point: 29.0, wd_occupancy: 0.10, wd_appliance: 0.10, wd_lighting: 0.10, we_occupancy: 0.10,  we_appliance: 0.10,  we_lighting: 0.10},
     {wd_heat_point: 16.0, wd_cool_point: 29.0, we_heat_point: 16.0, we_cool_point: 29.0, wd_occupancy: 0.10, wd_appliance: 0.10, wd_lighting: 0.10, we_occupancy: 0.10,  we_appliance: 0.10,  we_lighting: 0.10},
@@ -63,6 +144,7 @@ export let dailyUsage = [
 // definition of external facing building walls and windows
 export let buildingElements = [
     {
+        id: "wall1",
         type: "wall",
         orientation: "S",
         area: 73.5,
@@ -71,6 +153,7 @@ export let buildingElements = [
         emissivity: 0.7
     },
     {
+        id: "win1",
         type: "window",
         orientation: "S",
         area: 31.5,
@@ -80,6 +163,7 @@ export let buildingElements = [
         reduction_factor_Z_for_temporary: 1
     },
     {
+        id: "wall2",
         type: "wall",
         orientation: "E",
         area: 42.0,
@@ -88,6 +172,7 @@ export let buildingElements = [
         emissivity: 0.7
     },
     {
+        id: "win2",
         type: "window",
         orientation: "E",
         area: 18.0,
@@ -97,6 +182,7 @@ export let buildingElements = [
         reduction_factor_Z_for_temporary: 1
     },
     {
+        id: "wall3",
         type: "wall",
         orientation: "N",
         area: 73.5,
@@ -105,6 +191,7 @@ export let buildingElements = [
         emissivity: 0.7
     },
     {
+        id: "win3",
         type: "window",
         orientation: "N",
         area: 31.5,
@@ -114,6 +201,7 @@ export let buildingElements = [
         reduction_factor_Z_for_temporary: 1
     },
     {
+        id: "wall4",
         type: "wall",
         orientation: "W",
         area: 42.0,
@@ -122,6 +210,7 @@ export let buildingElements = [
         emissivity: 0.7
     },
     {
+        id: "win4",
         type: "window",
         orientation: "W",
         area: 18.0,
@@ -131,6 +220,7 @@ export let buildingElements = [
         reduction_factor_Z_for_temporary: 1
     },
     {
+        id: "roof",
         type: "roof",
         area: 112.0,
         u_value: 0.25,
@@ -146,17 +236,17 @@ export let buildingElements = [
 export let climate = [
     {
         mon: "jan",
-        temp: 4,
-        wind_speed: 4.6,
-        avg_solar_S: 166,
-        avg_solar_SE: 119,
-        avg_solar_E: 64,
-        avg_solar_NE: 33,
-        avg_solar_N: 30,
-        avg_solar_NW: 38,
-        avg_solar_W: 85,
-        avg_solar_SW: 144,
-        avg_solar_HOR: 116,
+        temp: 3.95935397039031,
+        wind_speed: 4.5611036339165,
+        avg_solar_S: 166.12566700312,
+        avg_solar_SE: 119.482467142232,
+        avg_solar_E: 64.4930149232445,
+        avg_solar_NE: 32.6406494216118,
+        avg_solar_N: 30.175006978882,
+        avg_solar_NW: 37.6795727730594,
+        avg_solar_W: 85.1155706726631,
+        avg_solar_SW: 143.726807873259,
+        avg_solar_HOR: 115.85464333782,
         solar_altitude: 22.4,
         dry_air_humidity: 3.60,
         atmospheric_pressure: 98645,
@@ -164,7 +254,8 @@ export let climate = [
         dew_point: -3.033512786,
         sky_cover: 0.616689098,
         sky_temp: 260.3223678,
-        solar_transmittance: 0.92
+        solar_transmittance: 0.9243,
+        hourly_horiz_solar_rad: [0,	0, 0, 0, 0, 0, 0, 8.58064516129032, 72.741935483871, 205.903225806452, 317.451612903226, 433.129032258065, 462.41935483871, 433.741935483871, 378.129032258065, 274, 151.903225806452, 38.6129032258064, 0.161290322580645, 0, 0, 0, 0, 0]
     },
     {
         mon: "feb",
@@ -186,7 +277,7 @@ export let climate = [
         dew_point: -1.325595238,
         sky_cover: 0.580505952,
         sky_temp: 264.706049,
-        solar_transmittance: 0.92
+        solar_transmittance: 0.9247
     },
     {
         mon: "mar",
@@ -208,7 +299,7 @@ export let climate = [
         dew_point: 3.800672043,
         sky_cover: 0.571639785,
         sky_temp: 271.9444134,
-        solar_transmittance: 0.88
+        solar_transmittance: 0.8805
     },
     {
         mon: "apr",
@@ -230,7 +321,7 @@ export let climate = [
         dew_point: 8.81,
         sky_cover: 0.448472222,
         sky_temp: 276.7888189,
-        solar_transmittance: 0.82
+        solar_transmittance: 0.8167
     },
     {
         mon: "may",
@@ -252,7 +343,7 @@ export let climate = [
         dew_point: 13.69435484,
         sky_cover: 0.593682796,
         sky_temp: 281.8729926,
-        solar_transmittance: 0.75
+        solar_transmittance: 0.7456
     },
     {
         mon: "jun",
@@ -274,7 +365,7 @@ export let climate = [
         dew_point: 16.44902778,
         sky_cover: 0.483333333,
         sky_temp: 286.199821,
-        solar_transmittance: 0.69
+        solar_transmittance: 0.6901
     },
     {
         mon: "jul",
@@ -296,7 +387,7 @@ export let climate = [
         dew_point: 19.84758065,
         sky_cover: 0.540188172,
         sky_temp: 288.5518314,
-        solar_transmittance: 0.72
+        solar_transmittance: 0.7217
     },
     {
         mon: "aug",
@@ -318,7 +409,7 @@ export let climate = [
         dew_point: 20.72446237,
         sky_cover: 0.549731183,
         sky_temp: 289.3616457,
-        solar_transmittance: 0.79
+        solar_transmittance: 0.7905
     },
     {
         mon: "sep",
@@ -340,7 +431,7 @@ export let climate = [
         dew_point: 16.82388889,
         sky_cover: 0.466944444,
         sky_temp: 284.1824533,
-        solar_transmittance: 0.86
+        solar_transmittance: 0.8613
     },
     {
         mon: "oct",
@@ -362,7 +453,7 @@ export let climate = [
         dew_point: 10.77755376,
         sky_cover: 0.484677419,
         sky_temp: 276.1970761,
-        solar_transmittance: 0.91
+        solar_transmittance: 0.9081
     },
     {
         mon: "nov",
@@ -384,7 +475,7 @@ export let climate = [
         dew_point: 4.173472222,
         sky_cover: 0.519166667,
         sky_temp: 270.3190692,
-        solar_transmittance: 0.93
+        solar_transmittance: 0.9294
     },
     {
         mon: "dec",
@@ -406,6 +497,6 @@ export let climate = [
         dew_point: 0.261342282,
         sky_cover: 0.555704698,
         sky_temp: 265.0909842,
-        solar_transmittance: 0.94
+        solar_transmittance: 0.9374
     }
 ];
