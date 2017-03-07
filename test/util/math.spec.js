@@ -15,4 +15,9 @@ describe("MathHelper", function() {
         expect(MathHelper.roundValues({a: 12.1248234, b: 44.2932}, 2)).toEqual({a: 12.12, b: 44.29});
         expect(MathHelper.roundValues({a: 12.1248234, b: 44.2932}, 3)).toEqual({a: 12.125, b: 44.293});
     });
+
+    it("can do various array math operations", function() {
+        expect(MathHelper.arrayAdd([1, 2, 3], [1, 2, 3])).toEqual([2, 4, 6]);
+        expect(MathHelper.arrayMult([1, 2, 3], [1, 2, 3])).toEqual([1, 4, 9]);
+    });
 });

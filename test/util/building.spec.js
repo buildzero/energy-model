@@ -1,8 +1,11 @@
 import {
     internalHeatCapacityByType,
+    thermalMass,
     vsite,
     windowOpeningAngleCk,
     heatRecoveryEfficiency} from "util/building";
+
+import {MathHelper} from "util/math";
 
 
 describe("internalHeatCapacityByType", function() {
@@ -11,6 +14,12 @@ describe("internalHeatCapacityByType", function() {
         expect(internalHeatCapacityByType("vheavy")).toEqual(370000);
         // default case
         expect(internalHeatCapacityByType("foobar")).toEqual(165000);
+    });
+});
+
+describe("thermalMass", function() {
+    it("can calculate thermal mass", function() {
+        expect(MathHelper.round(thermalMass("heavy", 336), 2)).toEqual(24266.67);
     });
 });
 

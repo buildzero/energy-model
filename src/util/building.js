@@ -22,6 +22,10 @@ export function internalHeatCapacityByType(type) {
 }
 
 
+export function thermalMass(capacityType, floorArea) {
+    return internalHeatCapacityByType(capacityType) * floorArea / 3600;
+}
+
 export function vsite(terrain) {
     // Terrain Class <Source: EN 15242:2007 Table A.1 Page38>
     // Terrain Class	vsite/vmetro

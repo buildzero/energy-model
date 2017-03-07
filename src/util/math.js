@@ -6,7 +6,7 @@ function roundNumber(number, precision) {
     var tempNumber = number * factor;
     var roundedTempNumber = Math.round(tempNumber);
     return roundedTempNumber / factor;
-};
+}
 
 function roundValues(obj, precision) {
     return _.mapObject(obj, function (v, k) {
@@ -27,9 +27,17 @@ function roundValues(obj, precision) {
             return v
         }
     });
-};
+}
+
+
 
 export let MathHelper = {
     round: roundNumber,
-    roundValues: roundValues
+    roundValues: roundValues,
+    arrayAdd: function(a1, a2) {
+        return a1.map((val, idx) => val + a2[idx]);
+    },
+    arrayMult: function(a1, a2) {
+        return a1.map((val, idx) => val * a2[idx]);
+    }
 };
