@@ -6,6 +6,11 @@ import {
     thermalRadiationToSky
 } from "model/solar";
 
+import {
+    mechanicalVentilationRate
+} from "model/ventilation";
+
+import {vsite, windowOpeningAngleCk} from "util/building";
 import {surfaceHeatResistence} from "util/climate";
 
 
@@ -30,20 +35,30 @@ const MONTHS = {
 
 
 // Total Calculation Steps
-//  * transmission heat transfer coefficient     (building elements)
-//  * total heat capacity                        (basic settings)
-//  * internal gains                             (basic usage inputs)
-//  * solar gains                                (climate & building elements)
+//  Global Calculations (only happens once)
+//    * transmission heat transfer coefficient     (building elements)
+//    * total heat capacity                        (settings)
+//
+//  Monthly Calculations (global)
+//    * internal gains                             (usage inputs)
+//    * solar gains                                (climate & building elements)
+//    * set points                                 (usage inputs, )
+//
+//  Monthly Calculations (heating & cooling)
+//    * transmission heat transfer
+//    * ventilation heat transfer coefficient
+//    * ventilation heat transfer
+//    * gain/loss utilization factors
+//    * heat gain/loss ratios
+//    * building time constant
+//
+//  Totals Calculations (summing individual monthly parts)
 
-//  * set points
-//  * transmission heat transfer
-//  * ventilation heat transfer
 
-//  * ventilation heat transfer coefficient
-//  * gain/loss utilization factors
-//  * heat gain/loss ratios
-//  * building time constant
-//  *
+
+// Hourly calculation needs
+//  * climate data needed hourly to determine night-time ventilation availability
+
 
 
 // Clause 7.x - Building energy need for space heating and cooling (pages 21-32)
@@ -188,6 +203,104 @@ export function heatTransferTransmission(month, setPointHeating, setPointCooling
 }
 
 
+// Clause 9.x - Heat Transfer by Ventilation (pages 38-46)
+// unit = megajoules
+//
+// Required:
+//  * definition of climate
+//  * definition of all air flow building elements (air infiltration, natural ventilation, etc)
+//  * a specific month of the year (1=January, 12=December)
+//  * set point for internal enviroment in heating and cooling mode
+//
+// NOTE: we are specifically doing the calculations for both heating and cooling
+//       mode and including both results in the output of this function.
+//
+// Output:
+//   {
+//      coefficient: 7.7,
+//      heating: 346.47,
+//      cooling: 470.21
+//   }
+//
+// Calculation Example:
+//   transferCoefficient = 7.7 W/K
+//   january = 2.678400 Ms
+//   set points = 20C for heating, 26C for cooling
+//   external temp january = 3.2C
+// Result:
+//   heating = 346.477824 MJ (96 kWh)
+//   cooling = 470.219904 MJ (131 kWh)
+export function heatTransferVentilation(month, setPointHeating, setPointCooling, climate, airflowElements, hourlyConditions, settings) {
+
+    let summarizedConditions = summarizeUsageConditions(hourlyConditions);
+    let hrEfficiency = heatRecoveryEfficiency(settings.heat_recovery_type);
+    let minHeatFlowRate = 30 * settings.occupants / settings.floor_area;
+
+    // (D12) get the standardized air flow rate in L/s
+    let outdoorAirStandardFlowRate = settings.outdoor_air_flow_rate * (settings.floor_area / settings.occupant_density);
+
+    // TODO: we need to do this for both heating and cooling
+    let setPoint = 0;
+
+    // Mechanical Ventilation
+    let mechRates = mechanicalVentilationRate(summarizedConditions.occupancy_weekly_fraction, settings.floor_area, outdoorAirStandardFlowRate);
+    let mechRate = mechRates.mechanicalSupplyRate * settings.exhaust_air_recirculation_percent;
+    mechRate = (mechRate < minHeatFlowRate) ? minHeatFlowRate : mechRate;
+    mechRate = (1 - hrEfficiency) * mechRate;
+
+    // Natural Ventilation (open windows)
+    // TODO: this doesn't work yet because we need a way to calculate nvAvailabilityFactor
+    let nvAvailabilityFactor = 0;
+    let ck = windowOpeningAngleCk(settings.window_opening_angle);
+    let nvRate = naturalVentilationRate(settings.window_area_opened, ck, settings.building_height, settings.floor_area, setPointHeating, climate.temp, climate.wind_speed, nvAvailabilityFactor);
+    nvRate = (nvRate < minHeatFlowRate) ? minHeatFlowRate : nvRate;
+
+    // Infiltration
+    // TODO: heating and cooling mode
+    let buildingVsite = vsite(settings.terrain_class);
+    let infiltrationRate = airInfiltrationRate(settings.air_leakage_level, settings.building_height, setPointHeating, climate.temp, climate.wind_speed, mechanicalSupplyRate, mechanicalExhaustRate, buildingVsite);
+
+    // Total Ventilation (based on type)
+    // type=1, Mechanical Ventilation
+    // type=2, Mechanical Ventilation + Natural Ventilation
+    // type=3, Natural Ventilation
+    let heatFlowRateOcc = 0;
+    if (settings.ventilation_type === 1) {
+        heatFlowRateOcc = mechRate;
+    } else if (settings.ventilation_type === 3) {
+        heatFlowRateOcc = nvRate;
+    } else {
+        heatFlowRateOcc = mechRate + nvRate;
+    }
+
+    // TODO: unoccupied ventilation calc
+    let heatFlowRateUnocc = 0;
+
+
+    let outdoorAirAch = mechanicalSupplyRate / settings.total_ventilated_volume * settings.floor_area;
+    let mechanicalVentFraction = summarizedConditions.occupancy_weekly_fraction;
+    let occVentilationFactor = mechanicalVentFraction;  // TODO: i'm not 100% these are the same thing
+    let unoccVentilationFactor = (settings.ventilation_demand_control === "always_on") ? 0.0 : 1 - occVentilationFactor;
+    let avgHeatFlowRate = heatFlowRateOcc * occVentilationFactor + heatFlowRateUnocc * unoccVentilationFactor + infiltrationRate.qv_inf;
+
+
+    // calculate the transfer coefficient for the given building definition
+    // NOTE: this should give us coefficients for individual categories of airflow elements
+    let transferCoefficient = heatTransferCoefficientByVentilation(airflowElements);
+
+    // other values we need for the calculations
+    let climateExternalTemp = climate[month].external_temp;
+    let timePeriodSeconds = MONTHS[month].seconds;
+
+    // we run the calculation below for both set points!
+    return {
+        coefficient: transferCoefficient,
+        heating: heatTransferByVentilationInternal(transferCoefficient, setPointHeating, climateExternalTemp, timePeriodSeconds),
+        cooling: heatTransferByVentilationInternal(transferCoefficient, setPointCooling, climateExternalTemp, timePeriodSeconds)
+    }
+}
+
+
 // Clause 10.x - Internal Heat Gains (pages 47-53)
 // unit = megajoules
 //
@@ -215,12 +328,15 @@ export function heatGainInternal(month, hourlyConditions, settings) {
     // calculate out the internal heat flow rates for each hour of a representative day
     let hourlyFlowRates = hourlyConditions.map((conditions) => heatFlowRates(conditions, settings));
 
+    // start by calculating our total monthly gains also broken out by category or gain
+    // NOTE: we also leave in the heat flow rate variables just for reference
     let output = {
         occupancy_rate: avgFlowRate(month, hourlyFlowRates, settings.floor_area, "occupancy"),
         appliance_rate: avgFlowRate(month, hourlyFlowRates, settings.floor_area, "appliance"),
         lighting_rate: avgFlowRate(month, hourlyFlowRates, settings.floor_area, "lighting"),
     };
 
+    // total flow rate is just a sum of the individual flow rates
     output.total_rate = output.occupancy_rate + output.appliance_rate + output.lighting_rate;
 
     // final monthly gains is given by multiplying the avg by the timeperiod in megaseconds
@@ -228,6 +344,15 @@ export function heatGainInternal(month, hourlyConditions, settings) {
     output.appliance = output.appliance_rate * (MONTHS[month].seconds / 1000000);
     output.lighting = output.lighting_rate * (MONTHS[month].seconds / 1000000);
     output.total = output.total_rate  * (MONTHS[month].seconds / 1000000);
+
+    // the second thing we need to calculate is total gains per hour-of-day also
+    // broken out between weekend and weekday usage scenarios
+    let weekdayDetails = hourlyFlowRates.map((hour) => hour.total_rate_wd * settings.floor_area);
+    let weekendDetails = hourlyFlowRates.map((hour) => hour.total_rate_we * settings.floor_area);
+    output.detailed = {
+        weekday: weekdayDetails,
+        weekend: weekendDetails
+    }
 
     return output;
 }
@@ -272,17 +397,10 @@ function avgFlowRate(month, flowRates, floorArea, attr) {
 //  * "radiative heat transfer coefficient" requires avg of surface and sky temp.
 //
 export function heatGainSolar(month, climate, buildingElements) {
-    // filter down our building envelope elements to just the external facing
-    // walls and windows which affect transmission
+    // separate walls from windows
     let walls = buildingElements.filter((elem) => elem.type === "wall" || elem.type === "roof");
     let windows = buildingElements.filter((elem) => elem.type === "window");
     // TODO: how to account for "sunspaces"??
-
-    // TODO: !!!!!!!!!!!!!  We may want to invert this calculation procedure
-    //                      so that we calculate all months of year grouped by
-    //                      element so that we can see how each element performs.
-    //                      By summing elements by month we have no insight into
-    //                      what parts of a building are underperforming.
 
     // TODO: shading reduction factor - accounts for effects of external shading.
     // by setting this to 1.0 we are saying there is no shading (yet!)
@@ -292,17 +410,13 @@ export function heatGainSolar(month, climate, buildingElements) {
     let surfaceHR = surfaceHeatResistence(climate.wind_speed);
 
     // WALLS - iterate over all opaque wall definitions and calculate solar gains
-    let totalWallHeatFlow = 0;
-    for (var i = 0; i < walls.length; i++) {
-        let wall = walls[i];
-
-        // TODO: use the appropriate orientation to determine this
+    let wallGains = walls.map(function(wall) {
+        // grab appropriate solar irradiance value from the climate data based on orientation
         let orient = wall.orientation ? wall.orientation : "HOR";
         let solarIrradiance = climate["avg_solar_"+orient];
 
         // NOTE: form factor is 0.5 for walls and 1.0 for roofs
         let formFactor = (wall.type === "roof") ? 1.0 : 0.5;
-
 
         // effective collecting area
         let effectiveCollectingArea = effectiveSolarCollectingAreaForOpaqueElement(wall.area, wall.u_value, wall.absorptivity, surfaceHR);
@@ -313,19 +427,18 @@ export function heatGainSolar(month, climate, buildingElements) {
         // calculate the total heat flow rate for this element
         let heatFlowRate = solarHeatFlowRateForElement(globalShadeReductionFactor, effectiveCollectingArea, solarIrradiance, formFactor, radiationToSky);
 
-        // console.info("wall", orient, " -> ", effectiveCollectingArea, radiationToSky, heatFlowRate);
+        // solar gain (MJ)
+        let gain = heatFlowRate * (MONTHS[month].seconds / 1000000);
 
-        // add to total heat flow rate
-        totalWallHeatFlow += heatFlowRate;
-    }
+        return {
+            id: wall.id,
+            heatFlowRate,
+            gain
+        };
+    });
 
     // WINDOWS - iterate over all window definitions and calculate solar gains
-    let totalWindowHeatFlow = 0;
-    for (var i = 0; i < windows.length; i++) {
-        let win = windows[i];
-
-        // TODO: movable shading factor.  we need to account for things like a manual shade on the window
-        //       which is different than the general shade reduction factor.
+    let windowGains = windows.map(function(win) {
         // NOTE: we can make a total shade reduction coefficient by multiplying
         //       the temporary shade reduction by the global shade reduction
         let shadeReductionFactor = globalShadeReductionFactor * win.reduction_factor_Z_for_temporary;
@@ -334,13 +447,12 @@ export function heatGainSolar(month, climate, buildingElements) {
         //       and 0.3 for cooling-dominated climates per 11.4.5
         let frameAreaFraction = 0.3;
 
-        // TODO: use the appropriate orientation to determine this
+        // grab appropriate solar irradiance value from the climate data based on orientation
         let orient = win.orientation ? win.orientation : "HOR";
         let solarIrradiance = climate["avg_solar_"+orient];
 
         // NOTE: form factor is 0.5 for walls and 1.0 for roofs
         let formFactor = (win.type === "roof") ? 1.0 : 0.5;
-
 
         // effective collecting area
         let effectiveCollectingArea = effectiveSolarCollectingAreaForGlazedElement(win.area, frameAreaFraction, climate.solar_transmittance, shadeReductionFactor);
@@ -351,12 +463,83 @@ export function heatGainSolar(month, climate, buildingElements) {
         // total solar gains
         let heatFlowRate = solarHeatFlowRateForElement(shadeReductionFactor, effectiveCollectingArea, solarIrradiance, formFactor, radiationToSky);
 
-        // console.info("window", orient, " -> ", effectiveCollectingArea, radiationToSky, heatFlowRate);
+        // solar gain (MJ)
+        let gain = heatFlowRate * (MONTHS[month].seconds / 1000000);
 
-        // add to total heat flow rate
-        totalWindowHeatFlow += heatFlowRate;
+        return {
+            id: win.id,
+            heatFlowRate,
+            gain
+        };
+    });
+
+    // calculate the total monthly flow rate and gains
+    let totalHeatFlowRate = wallGains.reduce((a, v) => a + v.heatFlowRate, 0) + windowGains.reduce((a, v) => a + v.heatFlowRate, 0);
+    let totalGains = totalHeatFlowRate * (MONTHS[month].seconds / 1000000);
+
+    // detailed gains per hour-of-day
+    // NOTE: we can do these next 2 things ahead of time in the climate data
+    let dailyHorizSolarRadiation = climate.hourly_horiz_solar_rad.reduce((a, v) => a + v, 0);
+    let hourlyRatioOfSolarRadiation = climate.hourly_horiz_solar_rad.map((v) => v / dailyHorizSolarRadiation);
+    let solarGainsDaily = totalHeatFlowRate * 24;
+    let hourlyGains = hourlyRatioOfSolarRadiation.map((v) => v * solarGainsDaily);
+
+    return {
+        detailed: hourlyGains,
+        walls: wallGains,
+        windows: windowGains,
+        total_rate: totalHeatFlowRate,
+        total: totalGains
     }
+}
 
-    // multiply our time-averaged gains against our time period
-    return (totalWallHeatFlow + totalWindowHeatFlow) * (MONTHS[month].seconds / 1000000);
+
+// Clause 13.x - Indoor Conditions aka Set Points (pages 68-76)
+//
+export function indoorConditions(month, hourlyConditions, heatTransferCoeffiecient, M, hourlyHeatGains, hourlyHve, climate) {
+    // initial temp is the heating set point on the 24th hour of a weekday
+    //=(C362-D819-AB323/(AB336+$D$173))*EXP(-(AB336+$D$173)/$D$313*AB$321)+D819+AB323/(AB336+$D$173)
+    //=(initialTemp - dryBulbTemp - hourlyGain / (Hve + heatTransferCoeffiecient)) * Math.exp(-(Hve + heatTransferCoeffiecient)/M * duration) + dryBultTemp + hourlyGain / (Hve + heatTransferCoeffiecient);
+
+    // calculate hour 1 init temps
+    // bound the values generated by the user defined set points
+
+    // Thu
+    // Fri
+    // Sat
+    // Sun
+    // Mon
+
+    // TODO: heating vs. cooling
+
+    // weekday setpoints by hour
+    let days = ["thu", "fri", "sat", "sun", "mon"];
+    let initialTemps = [16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16];
+    // let initialTemps = hourlyConditions[23].wd_heat_point;
+
+    // primer
+    for (var h = 0; h < 24; h++) {
+        let setPointTemp = hourlyConditions[h].wd_heat_point;
+        let duration = 1;
+
+        for (var m = 0; m < 12; m++) {
+            let initialTemp = initialTemps[m];
+            let dryBulbTemp = climate.dry_bulb_hourly[m][h];
+            let gains = hourlyHeatGains[m][h];
+            let Hve = hourlyHve[m][h];
+
+            let computed = gains / (Hve + heatTransferCoeffiecient);
+
+            // do the calculation
+            let calcTemp = (initialTemp - dryBulbTemp - computed) * Math.exp(-(Hve + heatTransferCoeffiecient)/M * duration) + dryBulbTemp + computed;
+
+            // normalize the value against our user defined set points
+            let normalizedTemp = calcTemp;
+            if (calcTemp < setPointTemp) {
+                normalizedTemp = setPointTemp;
+            } else if (calcTemp > maxSetPointTemp) {
+                normalizedTemp = maxSetPointTemp;
+            }
+        }
+    }
 }

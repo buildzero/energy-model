@@ -132,15 +132,38 @@ let GENERAL_SETTINGS = {
     metabolic_load: 88,           // W/person
     appliance_load: 10.0,         // W/m2
     lighting_load: 10.0,          // W/m2
-    outdoor_air: 10.0,            // liter/s/person
-    dhw: 5.0,                     // liter/m2/person
+    outdoor_air_flow_rate: 10.0,            // liter/s/person
+    dhw: 5.0,                               // liter/m2/person
+    heat_capacity_type: "heavy",            // vlight, light, medium, heavy, vheavy
+    total_ventilated_volume: 840,           // m3
+    building_height: 7.5,                   // m
+    terrain_class: "urban",                 // open, country, urban
 
     // lighting specific
     daylighting_factor: 1,
     lighting_occupancy_factor: 1,
     constant_illumination_factor: 1,
-    is_parasitic_lighting: 1,
-    annual_parasitic_load: 6
+    incl_parasitic_lighting: true,          // true/false
+    annual_parasitic_load: 6,               // kWh/m2/yr
+
+    // HVAC
+    hvac_system_type: 0,
+    ventilation_type: 0,           // mechanical, mechanical + natural, or natural
+    mech_vent_supply_rate: 0,
+    mech_vent_exhaust_rate: 0,
+    heat_recovery_type: 0,                  // none, heat exch plates/pipes, two elements, load cooling, heat pipes, slow rotating
+    exhaust_air_recirculation_percent: 0,   // none, 20%, 40%, 60%
+    air_leakage_level: 1.1,                 // m3/hr
+    specific_fan_power: 1.8,                // W/(l/s)
+    fan_flow_control: 1.0,
+    pump_control_heating: 0,
+    pump_control_cooling: 0,
+
+    // Natural Ventilation
+    window_area_opened: 100,                // m2
+    open_temp_heating: 21,                  // C (temp at which windows are opened, heating season)
+    open_temp_cooling: 24                   // C (temp at which windows are opened, cooling season)
+
 };
 
 
@@ -192,3 +215,37 @@ let CLIMATE = [
         solar_transmittance: 0.92
     }
 ];
+
+// month
+// heating vs cooling
+// category OR element
+let RESULT = {
+    heating: {
+        0: {
+            internal: {
+                lighting: 0,
+                appliance: 0,
+                occupancy: 0,
+                total: 0
+            },
+            solar: {
+
+            },
+            transmission: {
+
+            },
+            ventilation: {
+                mechanical: 0,
+                natural: 0,
+                infiltration: 0,
+                total: 0
+            }
+        },
+        total: {
+
+        }
+    },
+    cooling: {
+
+    }
+};
