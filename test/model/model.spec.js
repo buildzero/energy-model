@@ -9,8 +9,10 @@ import {
 
     // results
     heatTransferCoeffiecient,
+    heatTransferVentilationDetailed,
     internalGains,
-    solarGains
+    solarGains,
+    totalGainsDetailed
 } from "testdata/epc";
 
 
@@ -35,8 +37,7 @@ describe("Solar Gains", function() {
 describe("Indoor Conditions", function() {
     it("can calculate indoor set point conditions", function() {
         for (var mon = 0; mon < 1; mon++) {
-            // M, hourlyHeatGains, hourlyHve
-            // expect(MathHelper.roundValues(indoorConditions(mon+1, hourlyConditions, heatTransferCoeffiecient, climate[mon]), 0)).toEqual(solarGains[mon]);
+            expect(MathHelper.roundValues(indoorConditions(mon+1, buildingSettings, hourlyConditions, heatTransferCoeffiecient, totalGainsDetailed, heatTransferVentilationDetailed, climate), 0)).toEqual(solarGains[mon]);
         }
     });
 });
