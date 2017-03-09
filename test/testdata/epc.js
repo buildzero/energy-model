@@ -163,6 +163,13 @@ export let totalGainsDetailed = internalGainsDetailed.map((intGains, idx) => ({
 }));
 
 
+// INDOOR CONDITIONS
+export let averageIndoorConditions = {
+    heating: [18.98, 19.72, 20.53, 20.72, 20.95, 21, 21, 21, 21, 20.65, 20.29, 19.54],
+    cooling: [24.07, 24.15, 24.39, 24.93, 24.99, 25.25, 25.63, 25.41, 25.11, 24.64, 24.27, 24.14]
+};
+
+
 
 //=========   INPUTS   ==========
 

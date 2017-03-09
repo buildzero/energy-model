@@ -18,19 +18,21 @@ import {surfaceHeatResistence} from "util/climate";
 
 // basic data about the months of the year
 // NOTE: weekend_cnt is the number of days of the month which fall on a weekend (sat/sun)
+// NOTE: dow_cnt is number of days for any given day-of-week within the given month
+//       the values start on Sunday, e.g. 0=sun, 1=mon, ..., 6=sat
 const MONTHS = {
-    1: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 9},
-    2: {days: 28, hours: 672, seconds: 2419200, weekend_cnt: 8},
-    3: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8},
-    4: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 10},
-    5: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8},
-    6: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 8},
-    7: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 10},
-    8: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8},
-    9: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 9},
-    10: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 9},
-    11: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 8},
-    12: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 10}
+    1: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
+    2: {days: 28, hours: 672, seconds: 2419200, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 4, 4, 4]},
+    3: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 5, 4]},
+    4: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 4, 5]},
+    5: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8, dow_cnt: [4, 5, 5, 5, 4, 4, 4]},
+    6: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 5, 5, 4]},
+    7: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 10, dow_cnt: [5, 5, 4, 4, 4, 4, 5]},
+    8: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8, dow_cnt: [4, 4, 5, 5, 5, 4, 4]},
+    9: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 9, dow_cnt: [4, 4, 4, 4, 4, 5, 5]},
+    10: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
+    11: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 4, 4]},
+    12: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 5, 5]}
 };
 
 
@@ -496,7 +498,7 @@ export function heatGainSolar(month, climate, buildingElements) {
 
 // Clause 13.x - Indoor Conditions aka Set Points (pages 68-76)
 //
-export function indoorConditions(month, settings, hourlyConditions, heatTransferCoefficient, hourlyHeatGains, hourlyHve, climate) {
+export function indoorConditions(settings, hourlyConditions, heatTransferCoefficient, hourlyHeatGains, hourlyHve, climate) {
 
     let tMass = thermalMass(settings.heat_capacity_type, settings.floor_area);
 
@@ -619,18 +621,35 @@ export function indoorConditions(month, settings, hourlyConditions, heatTransfer
             };
         }
 
-        // days in month by day-of-week
+        // take the daily averages and aggregate them to monthly averages
+        let finalAverages = new Array(12);
+        for (var i = 0; i < 12; i++) {
+            let mon = MONTHS[i+1];
+            let total = mon.dow_cnt.reduce(function(tot, val, idx) {
+                if (idx === 0) {
+                    // sunday
+                    return tot + (val * results[3].normalizedAverages[i]);
+                } else if (idx === 1) {
+                    // monday
+                    return tot + (val * results[4].normalizedAverages[i]);
+                } else if (idx === 6) {
+                    // saturday
+                    return tot + (val * results[2].normalizedAverages[i]);
+                } else {
+                    // tues/wed/thur/fri
+                    return tot + (val * results[1].normalizedAverages[i]);
+                }
+            }, 0);
+            finalAverages[i] = total / mon.days;
+        }
 
         // pull together the full output
         if (isHeating) {
-            output.heating = results;
+            output.heating = finalAverages;
         } else {
-            output.cooling = results;
+            output.cooling = finalAverages;
         }
     }
 
-    console.info(output.heating[0].calcTemps[0]);
-    console.info(output.heating[0].normalizedTemps[0]);
-
-    // now reduce the data into simple averages
+    return output;
 }
