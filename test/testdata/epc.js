@@ -4,7 +4,23 @@ import {MathHelper} from "util/math";
 //=======   RESULTS   =========
 
 // TRANSMISSION HEAT TRANSFER
-export let heatTransferCoeffiecient = 414.76;
+export let heatTransferCoeffiecient = 415.5130;
+
+export let transmissionHeatTransfer = [
+    { heating: 16710.0657, cooling: 22384.5222 },
+    { heating: 11841.0070, cooling: 16299.5983 },
+    { heating: 7528.4216, cooling: 11822.1113 },
+    { heating: 3785.0056, cooling: 8310.7931 },
+    { heating: 125.6601, cooling: 4619.2588 },
+    { heating: -4087.8501, cooling: 485.8683 },
+    { heating: -5632.4615, cooling: -480.8584 },
+    { heating: -6176.8002, cooling: -1273.6780 },
+    { heating: -1646.9273, cooling: 2775.2721 },
+    { heating: 5144.2652, cooling: 9571.1560 },
+    { heating: 8984.6014, cooling: 13271.9446 },
+    { heating: 13187.4642, cooling: 18306.9098 }
+];
+
 
 // VENTILATION HEAT TRANSFER
 export let heatTransferVentilationDetailed = [
@@ -147,7 +163,7 @@ let solarGainsDetailed = [
 export let solarGains = [
     {
         detailed: solarGainsDetailed[0],
-        walls: [{ id: 'wall1', heatFlowRate: 89, gain: 240 }, { id: 'wall2', heatFlowRate: 9, gain: 25 }, { id: 'wall3', heatFlowRate: -8, gain: -23 }, { id: 'wall4', heatFlowRate: 18, gain: 48 }, { id: 'roof', heatFlowRate: 30, gain: 81 }],
+        walls: [{ id: 'wall1', heatFlowRate: 90, gain: 242 }, { id: 'wall2', heatFlowRate: 9, gain: 25 }, { id: 'wall3', heatFlowRate: -9, gain: -23 }, { id: 'wall4', heatFlowRate: 18, gain: 48 }, { id: 'roof', heatFlowRate: 30, gain: 80 }],
         windows: [{ id: 'win1', heatFlowRate: 2233, gain: 5980 }, { id: 'win2', heatFlowRate: 447, gain: 1198 }, { id: 'win3', heatFlowRate: 293, gain: 785 }, { id: 'win4', heatFlowRate: 615, gain: 1648 }],
         total_rate: 3727,
         total: 9983
@@ -165,8 +181,8 @@ export let totalGainsDetailed = internalGainsDetailed.map((intGains, idx) => ({
 
 // INDOOR CONDITIONS
 export let averageIndoorConditions = {
-    heating: [18.98, 19.72, 20.53, 20.72, 20.95, 21, 21, 21, 21, 20.65, 20.29, 19.54],
-    cooling: [24.07, 24.15, 24.39, 24.93, 24.99, 25.25, 25.63, 25.41, 25.11, 24.64, 24.27, 24.14]
+    heating: [18.9741, 19.7124, 20.5312, 20.7238, 20.9464, 21, 21, 21, 21, 20.6535, 20.288, 19.5393],
+    cooling: [24.073, 24.1482, 24.3901, 24.9301, 24.9846, 25.2469, 25.629, 25.4058, 25.1067, 24.6337, 24.2693, 24.1396]
 };
 
 
@@ -224,7 +240,7 @@ export let buildingElements = [
         type: "wall",
         orientation: "S",
         area: 73.5,
-        u_value: 0.35,
+        u_value: 0.353,
         absorptivity: 0.7,
         emissivity: 0.7
     },
@@ -233,7 +249,7 @@ export let buildingElements = [
         type: "window",
         orientation: "S",
         area: 31.5,
-        u_value: 3.09,
+        u_value: 3.094,
         emissivity: 0.84,
         solar_transmittance: 0.7,
         reduction_factor_Z_for_temporary: 1
@@ -243,7 +259,7 @@ export let buildingElements = [
         type: "wall",
         orientation: "E",
         area: 42.0,
-        u_value: 0.35,
+        u_value: 0.353,
         absorptivity: 0.7,
         emissivity: 0.7
     },
@@ -252,7 +268,7 @@ export let buildingElements = [
         type: "window",
         orientation: "E",
         area: 18.0,
-        u_value: 3.09,
+        u_value: 3.094,
         emissivity: 0.84,
         solar_transmittance: 0.7,
         reduction_factor_Z_for_temporary: 1
@@ -262,7 +278,7 @@ export let buildingElements = [
         type: "wall",
         orientation: "N",
         area: 73.5,
-        u_value: 0.35,
+        u_value: 0.353,
         absorptivity: 0.7,
         emissivity: 0.7
     },
@@ -271,7 +287,7 @@ export let buildingElements = [
         type: "window",
         orientation: "N",
         area: 31.5,
-        u_value: 3.09,
+        u_value: 3.094,
         emissivity: 0.84,
         solar_transmittance: 0.7,
         reduction_factor_Z_for_temporary: 1
@@ -281,7 +297,7 @@ export let buildingElements = [
         type: "wall",
         orientation: "W",
         area: 42.0,
-        u_value: 0.35,
+        u_value: 0.353,
         absorptivity: 0.7,
         emissivity: 0.7
     },
@@ -290,7 +306,7 @@ export let buildingElements = [
         type: "window",
         orientation: "W",
         area: 18.0,
-        u_value: 3.09,
+        u_value: 3.094,
         emissivity: 0.84,
         solar_transmittance: 0.7,
         reduction_factor_Z_for_temporary: 1
@@ -299,7 +315,7 @@ export let buildingElements = [
         id: "roof",
         type: "roof",
         area: 112.0,
-        u_value: 0.25,
+        u_value: 0.247,
         absorptivity: 0.85,
         emissivity: 0.85
     }
@@ -314,7 +330,7 @@ export let buildingElements = [
 export let climate = [
     {
         mon: "jan",
-        temp: 3.95935397039031,
+        temp: 3.959354,
         wind_speed: 4.5611036339165,
         avg_solar_S: 166.12566700312,
         avg_solar_SE: 119.482467142232,
@@ -338,7 +354,7 @@ export let climate = [
     },
     {
         mon: "feb",
-        temp: 8,
+        temp: 7.932738,
         wind_speed: 5.2,
         avg_solar_S: 162,
         avg_solar_SE: 127,
@@ -361,7 +377,7 @@ export let climate = [
     },
     {
         mon: "mar",
-        temp: 14,
+        temp: 13.766532,
         wind_speed: 4.9,
         avg_solar_S: 162,
         avg_solar_SE: 137,
@@ -384,7 +400,7 @@ export let climate = [
     },
     {
         mon: "apr",
-        temp: 17,
+        temp: 17.209444,
         wind_speed: 4.0,
         avg_solar_S: 138,
         avg_solar_SE: 141,
@@ -407,7 +423,7 @@ export let climate = [
     },
     {
         mon: "may",
-        temp: 21,
+        temp: 20.833468,
         wind_speed: 3.5,
         avg_solar_S: 117,
         avg_solar_SE: 139,
@@ -430,7 +446,7 @@ export let climate = [
     },
     {
         mon: "jun",
-        temp: 25,
+        temp: 24.795556,
         wind_speed: 3.9,
         avg_solar_S: 107,
         avg_solar_SE: 135,
@@ -453,7 +469,7 @@ export let climate = [
     },
     {
         mon: "jul",
-        temp: 26,
+        temp: 26.061022,
         wind_speed: 3.2,
         avg_solar_S: 108,
         avg_solar_SE: 134,
@@ -476,7 +492,7 @@ export let climate = [
     },
     {
         mon: "aug",
-        temp: 27,
+        temp: 26.550134,
         wind_speed: 3.4,
         avg_solar_S: 129,
         avg_solar_SE: 139,
@@ -499,7 +515,7 @@ export let climate = [
     },
     {
         mon: "sep",
-        temp: 23,
+        temp: 22.529167,
         wind_speed: 3.1,
         avg_solar_S: 135,
         avg_solar_SE: 127,
@@ -522,7 +538,7 @@ export let climate = [
     },
     {
         mon: "oct",
-        temp: 16,
+        temp: 16.031183,
         wind_speed: 4.0,
         avg_solar_S: 164,
         avg_solar_SE: 127,
@@ -545,7 +561,7 @@ export let climate = [
     },
     {
         mon: "nov",
-        temp: 12,
+        temp: 11.945833,
         wind_speed: 4.2,
         avg_solar_S: 166,
         avg_solar_SE: 121,
@@ -568,7 +584,7 @@ export let climate = [
     },
     {
         mon: "dec",
-        temp: 8,
+        temp: 7.689799,
         wind_speed: 4.7,
         avg_solar_S: 161,
         avg_solar_SE: 116,

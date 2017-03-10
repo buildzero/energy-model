@@ -6,6 +6,7 @@ import {
     thermalRadiationToSky
 } from "model/solar";
 
+import {heatTransferByTransmission} from "model/transmission";
 import {
     mechanicalVentilationRate
 } from "model/ventilation";
@@ -183,22 +184,14 @@ function basicEnergyDemands(month, setPointHeating, setPointCooling, climate, bu
 //      heating: 818.947584,
 //      cooling: 1111.428864
 //   }
-export function heatTransferTransmission(month, setPointHeating, setPointCooling, climate, buildingElements) {
-    // filter down our building envelope elements to just the external facing
-    // walls and windows which affect transmission
-    let walls = buildingElements.filter((elem) => elem.type === "wall" || elem.type === "roof");
-    let windows = buildingElements.filter((elem) => elem.type === "window");
-
-    // calculate the transfer coefficient for the given building definition
-    let transferCoefficient = heatTransferByTransmissionCoefficient(walls, windows);
+export function heatTransferTransmission(month, setPointHeating, setPointCooling, climate, transferCoefficient) {
 
     // other values we need for the calculations
-    let climateExternalTemp = climate[month].temp;
+    let climateExternalTemp = climate.temp;
     let timePeriodSeconds = MONTHS[month].seconds;
 
     // run the calculation for both heating and cooling modes
     return {
-        coefficient: transferCoefficient,
         heating: heatTransferByTransmission(transferCoefficient, setPointHeating, climateExternalTemp, timePeriodSeconds),
         cooling: heatTransferByTransmission(transferCoefficient, setPointCooling, climateExternalTemp, timePeriodSeconds)
     }

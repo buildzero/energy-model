@@ -1,4 +1,4 @@
-import {heatGainInternal, heatGainSolar, indoorConditions} from "model/model";
+import {heatTransferTransmission, heatGainInternal, heatGainSolar, indoorConditions} from "model/model";
 import {MathHelper} from "util/math";
 
 import {
@@ -9,6 +9,7 @@ import {
 
     // results
     heatTransferCoeffiecient,
+    transmissionHeatTransfer,
     heatTransferVentilationDetailed,
     internalGains,
     solarGains,
@@ -16,6 +17,15 @@ import {
     averageIndoorConditions
 } from "testdata/epc";
 
+
+
+describe("Transmission Heat Transfer", function() {
+    it("can calculate transmission HT monthly", function() {
+        for (var mon = 0; mon < 12; mon++) {
+            expect(MathHelper.roundValues(heatTransferTransmission(mon+1, averageIndoorConditions.heating[mon], averageIndoorConditions.cooling[mon], climate[mon], heatTransferCoeffiecient), 4)).toEqual(transmissionHeatTransfer[mon]);
+        }
+    });
+});
 
 
 describe("Internal Gains", function() {
@@ -37,6 +47,6 @@ describe("Solar Gains", function() {
 
 describe("Indoor Conditions", function() {
     it("can calculate indoor set point conditions", function() {
-        expect(MathHelper.roundValues(indoorConditions(buildingSettings, hourlyConditions, heatTransferCoeffiecient, totalGainsDetailed, heatTransferVentilationDetailed, climate), 2)).toEqual(averageIndoorConditions);
+        expect(MathHelper.roundValues(indoorConditions(buildingSettings, hourlyConditions, heatTransferCoeffiecient, totalGainsDetailed, heatTransferVentilationDetailed, climate), 4)).toEqual(averageIndoorConditions);
     });
 });
