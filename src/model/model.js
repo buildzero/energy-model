@@ -8,11 +8,14 @@ import {
 
 import {heatTransferByTransmission} from "model/transmission";
 import {
-    mechanicalVentilationRate
+    mechanicalVentilationRate,
+    naturalVentilationRate,
+    airInfiltrationRate
 } from "model/ventilation";
 
-import {internalHeatCapacityByType, thermalMass, vsite, windowOpeningAngleCk} from "util/building";
+import {internalHeatCapacityByType, thermalMass, vsite, heatRecoveryEfficiency, windowOpeningAngleCk} from "util/building";
 import {surfaceHeatResistence} from "util/climate";
+import {summarizeUsageConditions} from "util/schedule";
 
 
 // ISO 13790-2008
@@ -42,25 +45,18 @@ const MONTHS = {
 //    * transmission heat transfer coefficient     (building elements)
 //    * total heat capacity                        (settings)
 //
-//  Monthly Calculations (global)
-//    * internal gains                             (usage inputs)
-//    * solar gains                                (climate & building elements)
-//    * set points                                 (usage inputs, )
-//
-//  Monthly Calculations (heating & cooling)
-//    * transmission heat transfer
+//  Monthly Calculations
+//    * internal gains                             (building usage)
+//    * solar gains                                (building elements, climate)
 //    * ventilation heat transfer coefficient
-//    * ventilation heat transfer
+//    * internal conditions                        (settings, building usage, climate, gains, Hve, tranHtCoeff)
+//    * transmission heat transfer                 (internal conditions, climate, tranHtCoeff)
+//    * ventilation heat transfer                  (internal conditions, climate, ventHtCoeff)
 //    * gain/loss utilization factors
 //    * heat gain/loss ratios
 //    * building time constant
 //
 //  Totals Calculations (summing individual monthly parts)
-
-
-
-// Hourly calculation needs
-//  * climate data needed hourly to determine night-time ventilation availability
 
 
 
@@ -225,7 +221,20 @@ export function heatTransferTransmission(month, setPointHeating, setPointCooling
 // Result:
 //   heating = 346.477824 MJ (96 kWh)
 //   cooling = 470.219904 MJ (131 kWh)
-export function heatTransferVentilation(month, setPointHeating, setPointCooling, climate, airflowElements, hourlyConditions, settings) {
+export function heatTransferVentilation(month, setPointHeating, setPointCooling, climate, transferCoefficient) {
+
+    // other values we need for the calculations
+    let climateExternalTemp = climate[month].temp;
+    let timePeriodSeconds = MONTHS[month].seconds;
+
+    // we run the calculation below for both set points!
+    return {
+        heating: heatTransferByVentilationInternal(transferCoefficient, setPointHeating, climateExternalTemp, timePeriodSeconds),
+        cooling: heatTransferByVentilationInternal(transferCoefficient, setPointCooling, climateExternalTemp, timePeriodSeconds)
+    }
+}
+
+export function heatTransferVentilationCoefficient(month, settings, hourlyConditions, climate) {
 
     let summarizedConditions = summarizeUsageConditions(hourlyConditions);
     let hrEfficiency = heatRecoveryEfficiency(settings.heat_recovery_type);
@@ -246,6 +255,7 @@ export function heatTransferVentilation(month, setPointHeating, setPointCooling,
     // Natural Ventilation (open windows)
     // TODO: this doesn't work yet because we need a way to calculate nvAvailabilityFactor
     let nvAvailabilityFactor = 0;
+    let setPointHeating = 0;
     let ck = windowOpeningAngleCk(settings.window_opening_angle);
     let nvRate = naturalVentilationRate(settings.window_area_opened, ck, settings.building_height, settings.floor_area, setPointHeating, climate.temp, climate.wind_speed, nvAvailabilityFactor);
     nvRate = (nvRate < minHeatFlowRate) ? minHeatFlowRate : nvRate;
@@ -253,7 +263,7 @@ export function heatTransferVentilation(month, setPointHeating, setPointCooling,
     // Infiltration
     // TODO: heating and cooling mode
     let buildingVsite = vsite(settings.terrain_class);
-    let infiltrationRate = airInfiltrationRate(settings.air_leakage_level, settings.building_height, setPointHeating, climate.temp, climate.wind_speed, mechanicalSupplyRate, mechanicalExhaustRate, buildingVsite);
+    let infiltrationRate = airInfiltrationRate(settings.air_leakage_level, settings.building_height, setPointHeating, climate.temp, climate.wind_speed, mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
 
     // Total Ventilation (based on type)
     // type=1, Mechanical Ventilation
@@ -272,27 +282,35 @@ export function heatTransferVentilation(month, setPointHeating, setPointCooling,
     let heatFlowRateUnocc = 0;
 
 
-    let outdoorAirAch = mechanicalSupplyRate / settings.total_ventilated_volume * settings.floor_area;
+    let outdoorAirAch = mechRates.mechanicalSupplyRate / settings.total_ventilated_volume * settings.floor_area;
     let mechanicalVentFraction = summarizedConditions.occupancy_weekly_fraction;
     let occVentilationFactor = mechanicalVentFraction;  // TODO: i'm not 100% these are the same thing
     let unoccVentilationFactor = (settings.ventilation_demand_control === "always_on") ? 0.0 : 1 - occVentilationFactor;
     let avgHeatFlowRate = heatFlowRateOcc * occVentilationFactor + heatFlowRateUnocc * unoccVentilationFactor + infiltrationRate.qv_inf;
 
 
-    // calculate the transfer coefficient for the given building definition
-    // NOTE: this should give us coefficients for individual categories of airflow elements
-    let transferCoefficient = heatTransferCoefficientByVentilation(airflowElements);
+    // hourly Hve
+    // == qv_occ * occ_rate_for_hour + qv_unocc * unocc_rate_for_hour + qv_inf_hour / 3.6 * 1.2 * floor_area
+    let hveDetailsHeating = new Array(24);
+    let hveDetailsCooling = new Array(24);
+    for (var h = 0; h < 24; h++) {
+        let qv_inf_heat_wd = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_heat_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
+        let qv_inf_heat_we = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].we_heat_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
+        let qv_inf_cool_wd = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_cool_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
+        let qv_inf_cool_we = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].we_cool_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
 
-    // other values we need for the calculations
-    let climateExternalTemp = climate[month].external_temp;
-    let timePeriodSeconds = MONTHS[month].seconds;
+        hveDetailsHeating[h] = {
+            weekday: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_heat_wd.qv_inf / 3.6 * 1.2 * settings.floor_area,
+            weekend: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_heat_we.qv_inf / 3.6 * 1.2 * settings.floor_area
+        }
 
-    // we run the calculation below for both set points!
-    return {
-        coefficient: transferCoefficient,
-        heating: heatTransferByVentilationInternal(transferCoefficient, setPointHeating, climateExternalTemp, timePeriodSeconds),
-        cooling: heatTransferByVentilationInternal(transferCoefficient, setPointCooling, climateExternalTemp, timePeriodSeconds)
+        hveDetailsCooling[h] = {
+            weekday: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_cool_wd.qv_inf / 3.6 * 1.2 * settings.floor_area,
+            weekend: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_cool_we.qv_inf / 3.6 * 1.2 * settings.floor_area
+        }
     }
+
+    console.info(hveDetailsHeating);
 }
 
 

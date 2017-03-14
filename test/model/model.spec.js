@@ -1,4 +1,11 @@
-import {heatTransferTransmission, heatGainInternal, heatGainSolar, indoorConditions} from "model/model";
+import {
+    heatTransferTransmission,
+    heatTransferVentilationCoefficient,
+    heatGainInternal,
+    heatGainSolar,
+    indoorConditions
+} from "model/model";
+
 import {MathHelper} from "util/math";
 
 import {
@@ -23,6 +30,14 @@ describe("Transmission Heat Transfer", function() {
     it("can calculate transmission HT monthly", function() {
         for (var mon = 0; mon < 12; mon++) {
             expect(MathHelper.roundValues(heatTransferTransmission(mon+1, averageIndoorConditions.heating[mon], averageIndoorConditions.cooling[mon], climate[mon], heatTransferCoeffiecient), 4)).toEqual(transmissionHeatTransfer[mon]);
+        }
+    });
+});
+
+describe("Ventilation Heat Transfer", function() {
+    it("can calculate ventilation HT coefficient monthly", function() {
+        for (var mon = 0; mon < 1; mon++) {
+            expect(MathHelper.roundValues(heatTransferVentilationCoefficient(mon+1, buildingSettings, hourlyConditions, climate[mon]), 4)).toEqual({});
         }
     });
 });
