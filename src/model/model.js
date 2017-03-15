@@ -235,6 +235,8 @@ export function heatTransferVentilation(month, setPointHeating, setPointCooling,
 }
 
 export function heatTransferVentilationCoefficient(month, settings, hourlyConditions, climate) {
+    // q = air flow rate
+    // H = coefficient
 
     let summarizedConditions = summarizeUsageConditions(hourlyConditions);
     let hrEfficiency = heatRecoveryEfficiency(settings.heat_recovery_type);
@@ -258,7 +260,6 @@ export function heatTransferVentilationCoefficient(month, settings, hourlyCondit
     let setPointHeating = 0;
     let ck = windowOpeningAngleCk(settings.window_opening_angle);
     let nvRate = naturalVentilationRate(settings.window_area_opened, ck, settings.building_height, settings.floor_area, setPointHeating, climate.temp, climate.wind_speed, nvAvailabilityFactor);
-    nvRate = (nvRate < minHeatFlowRate) ? minHeatFlowRate : nvRate;
 
     // Infiltration
     // TODO: heating and cooling mode
@@ -273,7 +274,8 @@ export function heatTransferVentilationCoefficient(month, settings, hourlyCondit
     if (settings.ventilation_type === 1) {
         heatFlowRateOcc = mechRate;
     } else if (settings.ventilation_type === 3) {
-        heatFlowRateOcc = nvRate;
+        // when we are using purely natural ventilation then normalize
+        heatFlowRateOcc = (nvRate < minHeatFlowRate) ? minHeatFlowRate : nvRate;
     } else {
         heatFlowRateOcc = mechRate + nvRate;
     }
@@ -289,30 +291,46 @@ export function heatTransferVentilationCoefficient(month, settings, hourlyCondit
     let avgHeatFlowRate = heatFlowRateOcc * occVentilationFactor + heatFlowRateUnocc * unoccVentilationFactor + infiltrationRate.qv_inf;
 
 
-    // hourly Hve
-    // == qv_occ * occ_rate_for_hour + qv_unocc * unocc_rate_for_hour + qv_inf_hour / 3.6 * 1.2 * floor_area
-    let hveDetailsHeating = new Array(24);
-    let hveDetailsCooling = new Array(24);
+    // calculate out the ventilation coefficient (Hve) on an hourly basis
+    let ventilationCoeffHeating = {
+        weekday: new Array(24),
+        weekend: new Array(24)
+    };
+    let ventilationCoeffCooling = {
+        weekday: new Array(24),
+        weekend: new Array(24)
+    };
     for (var h = 0; h < 24; h++) {
-        let qv_inf_heat_wd = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_heat_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
-        let qv_inf_heat_we = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].we_heat_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
-        let qv_inf_cool_wd = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_cool_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
-        let qv_inf_cool_we = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].we_cool_point, climate.temp, climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
+        let qv_inf_heat = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_heat_point, climate.hourly_dry_bulb_temp[h], climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
+        let qv_inf_cool = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_cool_point, climate.hourly_dry_bulb_temp[h], climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
 
-        hveDetailsHeating[h] = {
-            weekday: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_heat_wd.qv_inf / 3.6 * 1.2 * settings.floor_area,
-            weekend: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_heat_we.qv_inf / 3.6 * 1.2 * settings.floor_area
-        }
+        // heating
+        ventilationCoeffHeating.weekday[h] = (heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_heat.qv_inf) / 3.6 * 1.2 * settings.floor_area;
+        ventilationCoeffHeating.weekend[h] = (heatFlowRateOcc * hourlyConditions[h].we_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].we_occupancy) + qv_inf_heat.qv_inf) / 3.6 * 1.2 * settings.floor_area;
 
-        hveDetailsCooling[h] = {
-            weekday: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_cool_wd.qv_inf / 3.6 * 1.2 * settings.floor_area,
-            weekend: heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_cool_we.qv_inf / 3.6 * 1.2 * settings.floor_area
-        }
+        // cooling
+        ventilationCoeffCooling.weekday[h] = (heatFlowRateOcc * hourlyConditions[h].wd_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].wd_occupancy) + qv_inf_cool.qv_inf) / 3.6 * 1.2 * settings.floor_area;
+        ventilationCoeffCooling.weekend[h] = (heatFlowRateOcc * hourlyConditions[h].we_occupancy + heatFlowRateUnocc * (1 - hourlyConditions[h].we_occupancy) + qv_inf_cool.qv_inf) / 3.6 * 1.2 * settings.floor_area;
     }
 
-    console.info(hveDetailsHeating);
+    // once we have the hourly data we can roll it up to monthly averages
+    ventilationCoeffHeating.average = avgCoeff(month, ventilationCoeffHeating);
+    ventilationCoeffCooling.average = avgCoeff(month, ventilationCoeffCooling);
+
+    return {
+        heating: ventilationCoeffHeating,
+        cooling: ventilationCoeffCooling
+    };
 }
 
+// this helps us take the monthly time averaged heat flow rate for a given category
+function avgCoeff(month, hourlyVentilationCoeffs) {
+    let avgWeekday = hourlyVentilationCoeffs.weekday.reduce((acc, val) => acc + val, 0)/24;
+    let avgWeekend = hourlyVentilationCoeffs.weekend.reduce((acc, val) => acc + val, 0)/24;
+    let totalWeekday = (MONTHS[month].days - MONTHS[month].weekend_cnt) * avgWeekday;
+    let totalWeekend = MONTHS[month].weekend_cnt * avgWeekend;
+    return (totalWeekday + totalWeekend) / MONTHS[month].days;
+}
 
 // Clause 10.x - Internal Heat Gains (pages 47-53)
 // unit = megajoules
@@ -507,7 +525,7 @@ export function heatGainSolar(month, climate, buildingElements) {
 }
 
 
-// Clause 13.x - Indoor Conditions aka Set Points (pages 68-76)
+// Clause 13.x - Indoor Conditions a.k.a. Set Points (pages 68-76)
 //
 export function indoorConditions(settings, hourlyConditions, heatTransferCoefficient, hourlyHeatGains, hourlyHve, climate) {
 
@@ -578,10 +596,12 @@ export function indoorConditions(settings, hourlyConditions, heatTransferCoeffic
 
                 // months within a year
                 for (var m = 0; m < 12; m++) {
+                    let HveData = isHeating ? hourlyHve[m].heating : hourlyHve[m].cooling;
+
                     let initialTemp = initialTemps[m];
                     let dryBulbTemp = climate[m].hourly_dry_bulb_temp[h];
                     let gains = isWeekday ? hourlyHeatGains[m].weekday[h] : hourlyHeatGains[m].weekend[h];
-                    let Hve = isWeekday ? hourlyHve[m].weekday[h] : hourlyHve[m].weekend[h];
+                    let Hve = isWeekday ? HveData.weekday[h] : HveData.weekend[h];
 
                     let computed = gains / (Hve + heatTransferCoefficient);
 
