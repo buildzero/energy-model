@@ -45,7 +45,7 @@ let ASSEMBLY = {
 
     // this stuff is all calculated
     thickness: 13.25,                       // total thickness
-    r_value: 41.6                           // total r-value (TODO: how to calc?)
+    r_value: 41.6,                           // total r-value (TODO: how to calc?)
     u_value: 0,                             // total u-value (TODO: how to calc?)
     g_value: 0.023                          // absorptivity * r-value * u-value
 };
@@ -61,7 +61,7 @@ let WINDOW = {
 
     // this stuff is all calculated
     thickness: 13.25,                       // total thickness
-    r_value: 41.6                           // total r-value (TODO: how to calc?)
+    r_value: 41.6,                          // total r-value (TODO: how to calc?)
     u_value: 0,                             // total u-value (TODO: how to calc?)
     g_value: 0.023                          // absorptivity * r-value * u-value
 };
