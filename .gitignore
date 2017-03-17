@@ -17,3 +17,4 @@ jspm_packages
 
 # app specific ignores
 /dist
+/lib
