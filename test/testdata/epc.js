@@ -260,7 +260,7 @@ export let internalGains = [
 
 // SOLAR GAINS
 let solarGainsDetailed = [
-    [0, 0, 0, 0, 0, 0, 0, 276, 2343, 6633, 10227, 13953, 14897, 13973, 12181, 8827, 4893, 1244, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 276, 2343, 6633, 10226, 13953, 14896, 13973, 12181, 8827, 4893, 1244, 5, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 337, 3063, 7033, 10853, 13254, 14702, 14448, 12754, 10112, 6024, 2014, 138, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 110, 1647, 4947, 9066, 11857, 14240, 15510, 15398, 13808, 11896, 7741, 3810, 796, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 3, 664, 3012, 6078, 9454, 12447, 14592, 14523, 14226, 12784, 10067, 7274, 3956, 1088, 37, 0, 0, 0, 0],
@@ -375,7 +375,7 @@ export let buildingElements = [
         area: 31.5,
         u_value: 3.094,
         emissivity: 0.84,
-        solar_transmittance: 0.7,
+        solar_transmittance: [0.92428491, 0.92466307, 0.88045630, 0.81673951, 0.74558917, 0.69007212, 0.72174371, 0.79049029, 0.86133756, 0.90807731, 0.92943874, 0.93738435],
         reduction_factor_Z_for_temporary: 1
     },
     {
@@ -394,7 +394,7 @@ export let buildingElements = [
         area: 18.0,
         u_value: 3.094,
         emissivity: 0.84,
-        solar_transmittance: 0.7,
+        solar_transmittance: [0.92428491, 0.92466307, 0.88045630, 0.81673951, 0.74558917, 0.69007212, 0.72174371, 0.79049029, 0.86133756, 0.90807731, 0.92943874, 0.93738435],
         reduction_factor_Z_for_temporary: 1
     },
     {
@@ -413,7 +413,7 @@ export let buildingElements = [
         area: 31.5,
         u_value: 3.094,
         emissivity: 0.84,
-        solar_transmittance: 0.7,
+        solar_transmittance: [0.92428491, 0.92466307, 0.88045630, 0.81673951, 0.74558917, 0.69007212, 0.72174371, 0.79049029, 0.86133756, 0.90807731, 0.92943874, 0.93738435],
         reduction_factor_Z_for_temporary: 1
     },
     {
@@ -432,7 +432,7 @@ export let buildingElements = [
         area: 18.0,
         u_value: 3.094,
         emissivity: 0.84,
-        solar_transmittance: 0.7,
+        solar_transmittance: [0.92428491, 0.92466307, 0.88045630, 0.81673951, 0.74558917, 0.69007212, 0.72174371, 0.79049029, 0.86133756, 0.90807731, 0.92943874, 0.93738435],
         reduction_factor_Z_for_temporary: 1
     },
     {
@@ -445,7 +445,7 @@ export let buildingElements = [
     }
 ];
 
-
+  
 
 // region is Atlanta
 // should be an array with each element corresponding to a month of year (0=jan, 11=dec)
