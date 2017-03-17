@@ -25,18 +25,18 @@ import {summarizeUsageConditions} from "util/schedule";
 // NOTE: dow_cnt is number of days for any given day-of-week within the given month
 //       the values start on Sunday, e.g. 0=sun, 1=mon, ..., 6=sat
 const MONTHS = {
-    1: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
-    2: {days: 28, hours: 672, seconds: 2419200, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 4, 4, 4]},
-    3: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 5, 4]},
-    4: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 4, 5]},
-    5: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8, dow_cnt: [4, 5, 5, 5, 4, 4, 4]},
-    6: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 5, 5, 4]},
-    7: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 10, dow_cnt: [5, 5, 4, 4, 4, 4, 5]},
-    8: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 8, dow_cnt: [4, 4, 5, 5, 5, 4, 4]},
-    9: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 9, dow_cnt: [4, 4, 4, 4, 4, 5, 5]},
-    10: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
-    11: {days: 30, hours: 720, seconds: 2592000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 4, 4]},
-    12: {days: 31, hours: 744, seconds: 2678400, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 5, 5]}
+    1: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
+    2: {days: 28, hours: 672, seconds: 2419200, megaseconds: 2419200/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 4, 4, 4]},
+    3: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 5, 4]},
+    4: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 4, 5]},
+    5: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 5, 5, 5, 4, 4, 4]},
+    6: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 5, 5, 4]},
+    7: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 10, dow_cnt: [5, 5, 4, 4, 4, 4, 5]},
+    8: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 5, 5, 5, 4, 4]},
+    9: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 9, dow_cnt: [4, 4, 4, 4, 4, 5, 5]},
+    10: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
+    11: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 4, 4]},
+    12: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 5, 5]}
 };
 
 
@@ -332,6 +332,8 @@ function avgCoeff(month, hourlyVentilationCoeffs) {
     return (totalWeekday + totalWeekend) / MONTHS[month].days;
 }
 
+
+
 // Clause 10.x - Internal Heat Gains (pages 47-53)
 // unit = megajoules
 //
@@ -371,10 +373,10 @@ export function heatGainInternal(month, hourlyConditions, settings) {
     output.total_rate = output.occupancy_rate + output.appliance_rate + output.lighting_rate;
 
     // final monthly gains is given by multiplying the avg by the timeperiod in megaseconds
-    output.occupancy = output.occupancy_rate * (MONTHS[month].seconds / 1000000);
-    output.appliance = output.appliance_rate * (MONTHS[month].seconds / 1000000);
-    output.lighting = output.lighting_rate * (MONTHS[month].seconds / 1000000);
-    output.total = output.total_rate  * (MONTHS[month].seconds / 1000000);
+    output.occupancy = output.occupancy_rate * MONTHS[month].megaseconds;
+    output.appliance = output.appliance_rate * MONTHS[month].megaseconds;
+    output.lighting = output.lighting_rate * MONTHS[month].megaseconds;
+    output.total = output.total_rate  * MONTHS[month].megaseconds;
 
     // the second thing we need to calculate is total gains per hour-of-day also
     // broken out between weekend and weekday usage scenarios
@@ -459,7 +461,7 @@ export function heatGainSolar(month, climate, buildingElements) {
         let heatFlowRate = solarHeatFlowRateForElement(globalShadeReductionFactor, effectiveCollectingArea, solarIrradiance, formFactor, radiationToSky);
 
         // solar gain (MJ)
-        let gain = heatFlowRate * (MONTHS[month].seconds / 1000000);
+        let gain = heatFlowRate * MONTHS[month].megaseconds;
 
         return {
             id: wall.id,
@@ -495,7 +497,7 @@ export function heatGainSolar(month, climate, buildingElements) {
         let heatFlowRate = solarHeatFlowRateForElement(shadeReductionFactor, effectiveCollectingArea, solarIrradiance, formFactor, radiationToSky);
 
         // solar gain (MJ)
-        let gain = heatFlowRate * (MONTHS[month].seconds / 1000000);
+        let gain = heatFlowRate * MONTHS[month].megaseconds;
 
         return {
             id: win.id,
@@ -506,7 +508,7 @@ export function heatGainSolar(month, climate, buildingElements) {
 
     // calculate the total monthly flow rate and gains
     let totalHeatFlowRate = wallGains.reduce((a, v) => a + v.heatFlowRate, 0) + windowGains.reduce((a, v) => a + v.heatFlowRate, 0);
-    let totalGains = totalHeatFlowRate * (MONTHS[month].seconds / 1000000);
+    let totalGains = totalHeatFlowRate * MONTHS[month].megaseconds;
 
     // detailed gains per hour-of-day
     // NOTE: we can do these next 2 things ahead of time in the climate data
