@@ -27,11 +27,11 @@ import {
 
 
 describe("Transmission Heat Transfer", function() {
-    it("can calculate transmission HT monthly", function() {
-        for (let mon = 0; mon < 12; mon++) {
+    for (let mon = 0; mon < 12; mon++) {
+        it("can calculate transmission HT, month="+mon, function() {
             expect(MathHelper.roundValues(heatTransferTransmission(mon+1, averageIndoorConditions.heating[mon], averageIndoorConditions.cooling[mon], climate[mon], heatTransferCoeffiecient), 4)).toEqual(transmissionHeatTransfer[mon]);
-        }
-    });
+        });
+    } 
 });
 
 describe("Ventilation Heat Transfer", function() {
@@ -42,29 +42,31 @@ describe("Ventilation Heat Transfer", function() {
     //     }
     // });
 
-    it("can calculate ventilation coefficient monthly averages", function() {
-        for (let mon = 0; mon < 12; mon++) {
+    for (let mon = 0; mon < 12; mon++) {
+        it("can calculate ventilation coefficient, month="+mon, function() {
+        
             let coeffs = heatTransferVentilationCoefficient(mon+1, buildingSettings, hourlyConditions, climate[mon]);
 
             expect(MathHelper.round(coeffs.heating.average, 4)).toEqual(ventilationCoefficientDetailed[mon].heating.average);
             expect(MathHelper.round(coeffs.cooling.average, 4)).toEqual(ventilationCoefficientDetailed[mon].cooling.average);
-        }
-    });
+        });
+    }
 });
 
 
 describe("Internal Gains", function() {
-    it("can calculate internal gains monthly", function() {
-        for (let mon = 0; mon < 12; mon++) {
+    for (let mon = 0; mon < 12; mon++) {
+        it("can calculate internal gains, month="+mon, function() {
+            // TODO: better decimal precision
             expect(MathHelper.roundValues(heatGainInternal(mon+1, hourlyConditions, buildingSettings), 0)).toEqual(internalGains[mon]);
-        }
-    });
+        });
+    }
 });
 
 
 describe("Solar Gains", function() {
     for (let mon = 0; mon < 12; mon++) {
-        it("can calculate solar gains for month="+mon, function() {
+        it("can calculate solar gains, month="+mon, function() {
             // TODO: ideally these would match at even more granular precision
             expect(MathHelper.roundValues(heatGainSolar(mon+1, climate[mon], buildingElements), 2)).toEqual(MathHelper.roundValues(solarGains[mon], 2));
         });
