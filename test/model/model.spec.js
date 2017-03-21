@@ -28,7 +28,7 @@ import {
 
 describe("Transmission Heat Transfer", function() {
     it("can calculate transmission HT monthly", function() {
-        for (var mon = 0; mon < 12; mon++) {
+        for (let mon = 0; mon < 12; mon++) {
             expect(MathHelper.roundValues(heatTransferTransmission(mon+1, averageIndoorConditions.heating[mon], averageIndoorConditions.cooling[mon], climate[mon], heatTransferCoeffiecient), 4)).toEqual(transmissionHeatTransfer[mon]);
         }
     });
@@ -43,7 +43,7 @@ describe("Ventilation Heat Transfer", function() {
     // });
 
     it("can calculate ventilation coefficient monthly averages", function() {
-        for (var mon = 0; mon < 12; mon++) {
+        for (let mon = 0; mon < 12; mon++) {
             let coeffs = heatTransferVentilationCoefficient(mon+1, buildingSettings, hourlyConditions, climate[mon]);
 
             expect(MathHelper.round(coeffs.heating.average, 4)).toEqual(ventilationCoefficientDetailed[mon].heating.average);
@@ -55,7 +55,7 @@ describe("Ventilation Heat Transfer", function() {
 
 describe("Internal Gains", function() {
     it("can calculate internal gains monthly", function() {
-        for (var mon = 0; mon < 12; mon++) {
+        for (let mon = 0; mon < 12; mon++) {
             expect(MathHelper.roundValues(heatGainInternal(mon+1, hourlyConditions, buildingSettings), 0)).toEqual(internalGains[mon]);
         }
     });
@@ -63,15 +63,16 @@ describe("Internal Gains", function() {
 
 
 describe("Solar Gains", function() {
-    it("can calculate solar gains monthly", function() {
-        for (var mon = 0; mon < 1; mon++) {
-            expect(MathHelper.roundValues(heatGainSolar(mon+1, climate[mon], buildingElements), 0)).toEqual(solarGains[mon]);
-        }
-    });
+    for (let mon = 0; mon < 12; mon++) {
+        it("can calculate solar gains for month="+mon, function() {
+            // TODO: ideally these would match at even more granular precision
+            expect(MathHelper.roundValues(heatGainSolar(mon+1, climate[mon], buildingElements), 2)).toEqual(MathHelper.roundValues(solarGains[mon], 2));
+        });
+    }
 });
 
 describe("Indoor Conditions", function() {
     it("can calculate indoor set point conditions", function() {
-        expect(MathHelper.roundValues(indoorConditions(buildingSettings, hourlyConditions, heatTransferCoeffiecient, totalGainsDetailed, ventilationCoefficientDetailed, climate), 4)).toEqual(averageIndoorConditions);
+        expect(MathHelper.roundValues(indoorConditions(buildingSettings, hourlyConditions, heatTransferCoeffiecient, totalGainsDetailed, ventilationCoefficientDetailed, climate), 3)).toEqual(MathHelper.roundValues(averageIndoorConditions, 3));
     });
 });

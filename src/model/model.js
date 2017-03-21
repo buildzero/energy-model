@@ -1,3 +1,5 @@
+import _ from "underscore";
+
 import {heatFlowRates} from "model/internal";
 import {
     effectiveSolarCollectingAreaForGlazedElement,
@@ -519,9 +521,8 @@ export function heatGainSolar(month, climate, buildingElements) {
 
     return {
         detailed: hourlyGains,
-        walls: wallGains,
-        windows: windowGains,
-        total_rate: totalHeatFlowRate,
+        walls: wallGains.map((v) => _.omit(v, "heatFlowRate")),
+        windows: windowGains.map((v) => _.omit(v, "heatFlowRate")),
         total: totalGains
     }
 }
