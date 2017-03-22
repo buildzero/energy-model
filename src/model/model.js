@@ -302,7 +302,7 @@ export function heatTransferVentilationCoefficient(month, settings, hourlyCondit
         weekday: new Array(24),
         weekend: new Array(24)
     };
-    for (var h = 0; h < 24; h++) {
+    for (let h = 0; h < 24; h++) {
         let qv_inf_heat = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_heat_point, climate.hourly_dry_bulb_temp[h], climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
         let qv_inf_cool = airInfiltrationRate(settings.air_leakage_level, settings.building_height, hourlyConditions[h].wd_cool_point, climate.hourly_dry_bulb_temp[h], climate.hourly_wind_speed[h], mechRates.mechanicalSupplyRate, mechRates.mechanicalExhaustRate, buildingVsite);
 
@@ -537,14 +537,14 @@ export function indoorConditions(settings, hourlyConditions, heatTransferCoeffic
     let output = {};
 
     // first heating, then cooling
-    for (var mode = 0; mode < 2; mode++) {
+    for (let mode = 0; mode < 2; mode++) {
         let isHeating = (mode === 0);
 
         // make sure we start with the proper initial temps
         // NOTE: the first pass is always considered a weekday
         let endOfDaySetPoint = isHeating ? hourlyConditions[23].wd_heat_point : hourlyConditions[23].wd_cool_point;
         let initialTemps = new Array(12);
-        for (var i = 0; i < initialTemps.length; i++) {
+        for (let i = 0; i < initialTemps.length; i++) {
             initialTemps[i] = endOfDaySetPoint;
         }
 
@@ -552,7 +552,7 @@ export function indoorConditions(settings, hourlyConditions, heatTransferCoeffic
         // week for each of the months in year.  done in the following order:
         // primer, tue/wed/thu/fri, sat, sun, mon
         let results = new Array(5);
-        for (var d = 0; d < 5; d++) {
+        for (let d = 0; d < 5; d++) {
             let isWeekday = (d < 2 || d > 3);
 
             let setPointKey = "";
@@ -585,20 +585,20 @@ export function indoorConditions(settings, hourlyConditions, heatTransferCoeffic
             // prep a data structure for the result
             let calcTemps = new Array(12);
             let normalizedTemps = new Array(12);
-            for (var i = 0; i < calcTemps.length; i++) {
+            for (let i = 0; i < calcTemps.length; i++) {
                 calcTemps[i] = new Array(24);
                 normalizedTemps[i] = new Array(24);
             }
 
             // hours within a day
-            for (var h = 0; h < 24; h++) {
+            for (let h = 0; h < 24; h++) {
                 let setPointTemp = hourlyConditions[h][setPointKey];
                 let duration = 1;
 
                 let newInitialTemps = new Array(12);
 
                 // months within a year
-                for (var m = 0; m < 12; m++) {
+                for (let m = 0; m < 12; m++) {
                     let HveData = isHeating ? hourlyHve[m].heating : hourlyHve[m].cooling;
 
                     let initialTemp = initialTemps[m];
@@ -641,7 +641,7 @@ export function indoorConditions(settings, hourlyConditions, heatTransferCoeffic
             // reduce the data into averages
             let calcAverages = new Array(12);
             let normalizedAverages = new Array(12);
-            for (var i = 0; i < 12; i++) {
+            for (let i = 0; i < 12; i++) {
                 calcAverages[i] = calcTemps[i].reduce((a, b) => a + b) / 24;
                 normalizedAverages[i] = normalizedTemps[i].reduce((a, b) => a + b) / 24;
             }
@@ -657,7 +657,7 @@ export function indoorConditions(settings, hourlyConditions, heatTransferCoeffic
 
         // take the daily averages and aggregate them to monthly averages
         let finalAverages = new Array(12);
-        for (var i = 0; i < 12; i++) {
+        for (let i = 0; i < 12; i++) {
             let mon = MONTHS[i+1];
             let total = mon.dow_cnt.reduce(function(tot, val, idx) {
                 if (idx === 0) {

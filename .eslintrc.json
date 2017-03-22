@@ -1,9 +1,7 @@
 {
     "env": {
-        "browser": true,
         "es6": true,
-        "commonjs": true,
-        "jest": true
+        "jasmine": true
     },
     "parser": "babel-eslint",
     "extends": ["eslint:recommended"],
@@ -31,6 +29,7 @@
         "no-underscore-dangle": 0,
         "no-unused-vars": [1, {"vars": "all", "args": "none"}],
         "no-use-before-define": 0,
+        "no-var": 1,
         "quotes": 0,
         "semi": 0,
         "space-infix-ops": 0,
