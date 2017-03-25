@@ -1,12 +1,25 @@
 import {
+    heatTransferByVentilation,
     airInfiltrationRate,
     mechanicalVentilationRate,
     naturalVentilationRate} from "model/ventilation";
 
+import {averageIndoorConditions, climate, ventilationCoefficientDetailed, ventilationHeatTransfer} from "testdata/epc";
+
 import {MathHelper} from "util/math";
+import {MONTHS} from "util/schedule";
 
 
 describe("Ventilation Heat Transfer", function() {
+
+    // Ventilation Heat Transfer
+    it("can calculate ventilation heat transfer", function() {
+        let ventilationHT_heating = heatTransferByVentilation(ventilationCoefficientDetailed[0].heating.average, averageIndoorConditions.heating[0], climate[0].temp, MONTHS[0].megaseconds);
+        expect(ventilationHT_heating).toBeCloseTo(ventilationHeatTransfer[0].heating, 1);
+
+        let ventilationHT_cooling = heatTransferByVentilation(ventilationCoefficientDetailed[0].cooling.average, averageIndoorConditions.cooling[0], climate[0].temp, MONTHS[0].megaseconds);
+        expect(ventilationHT_cooling).toBeCloseTo(ventilationHeatTransfer[0].cooling, 1);
+    });
 
     // Mechanical Ventilation
     it("can calculate mechanical ventilation rates", function() {

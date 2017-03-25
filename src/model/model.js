@@ -1,6 +1,9 @@
 import _ from "underscore";
 
-import {heatFlowRates} from "model/internal";
+import {
+    heatFlowRates
+} from "model/internal";
+
 import {
     effectiveSolarCollectingAreaForGlazedElement,
     effectiveSolarCollectingAreaForOpaqueElement,
@@ -8,8 +11,13 @@ import {
     thermalRadiationToSky
 } from "model/solar";
 
-import {heatTransferByTransmission} from "model/transmission";
 import {
+    heatTransferByTransmission, 
+    heatTransferByTransmissionCoefficient
+} from "model/transmission";
+
+import {
+    heatTransferByVentilation,
     mechanicalVentilationRate,
     naturalVentilationRate,
     airInfiltrationRate
@@ -17,31 +25,16 @@ import {
 
 import {internalHeatCapacityByType, thermalMass, vsite, heatRecoveryEfficiency, windowOpeningAngleCk} from "util/building";
 import {surfaceHeatResistence} from "util/climate";
-import {summarizeUsageConditions} from "util/schedule";
+import {MathHelper} from "util/math";
+import {MONTHS, summarizeUsageConditions} from "util/schedule";
 
 
 // ISO 13790-2008
 
-// basic data about the months of the year
-// NOTE: weekend_cnt is the number of days of the month which fall on a weekend (sat/sun)
-// NOTE: dow_cnt is number of days for any given day-of-week within the given month
-//       the values start on Sunday, e.g. 0=sun, 1=mon, ..., 6=sat
-const MONTHS = {
-    1: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
-    2: {days: 28, hours: 672, seconds: 2419200, megaseconds: 2419200/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 4, 4, 4]},
-    3: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 5, 4]},
-    4: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 4, 5]},
-    5: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 5, 5, 5, 4, 4, 4]},
-    6: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 5, 5, 4]},
-    7: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 10, dow_cnt: [5, 5, 4, 4, 4, 4, 5]},
-    8: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 5, 5, 5, 4, 4]},
-    9: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 9, dow_cnt: [4, 4, 4, 4, 4, 5, 5]},
-    10: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
-    11: {days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 4, 4]},
-    12: {days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 5, 5]}
-};
-
-
+// Clause 7.x - Building energy need for space heating and cooling (pages 21-32)
+//
+// 7.1 - Overall calculation
+// 
 // Total Calculation Steps
 //  Global Calculations (only happens once)
 //    * transmission heat transfer coefficient     (building elements)
@@ -59,13 +52,7 @@ const MONTHS = {
 //    * building time constant
 //
 //  Totals Calculations (summing individual monthly parts)
-
-
-
-// Clause 7.x - Building energy need for space heating and cooling (pages 21-32)
-
-// 7.1 - Overall calculation
-function energyDemand() {
+export function energyDemand(settings, hourlyConditions, buildingElements, climateData) {
     // some of the final calculations require the ability to reference values from
     // different months for things like our dynamic parameters, so what we do is
     // take 2 passes over calculations for each month.  the first pass calculates
@@ -76,34 +63,104 @@ function energyDemand() {
     // start with a simple data structure we'll use for our model output
     // we want to have results for each month of the year plus a "global"
     // results section which has values which are constant across months
-    let results = {};
+    let results = {global: {}};
 
-    // calculate individual energy demand values for each month
-    for(let month in MONTHS) {
-        results[month.id] = basicEnergyDemands(month, setPoint, climate, buildingEnvelope, airflowElements, components, elements);
-    }
+    // separate walls from windows
+    let walls = buildingElements.filter((elem) => elem.type === "wall" || elem.type === "roof");
+    let windows = buildingElements.filter((elem) => elem.type === "window");
+
+    // 1. Global Transmission HT Coefficient
+    results.global.transmissionHeatTransferCoeff = heatTransferByTransmissionCoefficient(walls, windows);
+
+    // 2. Global Heat Capacity
+
+    // calculate monthly gains and ventilation transfer coefficients
+    results.monthly = MONTHS.map((month, monthIndex) => {
+        let climate = climateData[monthIndex];
+
+        // 3.1 Internal Gains
+        let internalGain = heatGainInternal(month, hourlyConditions, settings);
+
+        // 3.2 Solar Gains
+        let solarGain = heatGainSolar(month, climate, walls, windows);
+
+        // 3.3 Total Gains
+        let totalGain = internalGain.total + solarGain.total;
+        let totalGainHourly = {
+            weekday: MathHelper.arrayAdd(internalGain.detailed.weekday, solarGain.detailed),
+            weekend: MathHelper.arrayAdd(internalGain.detailed.weekend, solarGain.detailed)
+        };
+
+        // 3.4 Ventilation Heat Transfer Coefficients
+        let ventilationTransferCoeffs = heatTransferVentilationCoefficient(month, settings, hourlyConditions, climate);
+
+        return {
+            internalGain,
+            solarGain,
+            totalGain,
+            totalGainHourly,
+            ventilationTransferCoeffs
+        };
+    });
+
+    // 4. Indoor Conditions
+    results.global.indoorConditions = indoorConditions(settings, hourlyConditions, results.global.transmissionHeatTransferCoeff, results.monthly.map((v) => v.totalGainHourly), results.monthly.map((v) => v.ventilationTransferCoeffs), climateData);
+    
+    // calculate monthly heat transfer
+    let monthlyHeatTransfer = MONTHS.map((month, monthIndex) => {
+        let climate = climateData[monthIndex];
+
+        // 5.1 Transmission Heat Transfer
+        let transmissionTransfer = {
+            heating: heatTransferByTransmission(results.global.transmissionHeatTransferCoeff, results.global.indoorConditions.heating[monthIndex], climate.temp, month.megaseconds),
+            cooling: heatTransferByTransmission(results.global.transmissionHeatTransferCoeff, results.global.indoorConditions.cooling[monthIndex], climate.temp, month.megaseconds)
+        };
+        
+        // 5.2 Ventilation Heat Transfer
+        let ventilationTransfer = {
+            heating: heatTransferByVentilation(results.monthly[monthIndex].ventilationTransferCoeffs.heating.average, results.global.indoorConditions.heating[monthIndex], climate.temp, month.megaseconds),
+            cooling: heatTransferByVentilation(results.monthly[monthIndex].ventilationTransferCoeffs.cooling.average, results.global.indoorConditions.cooling[monthIndex], climate.temp, month.megaseconds)
+        };
+
+        // 5.3 Total Heat Transfer
+        let totalTransfer = {
+            heating: transmissionTransfer.heating + ventilationTransfer.heating,
+            cooling: transmissionTransfer.cooling + ventilationTransfer.cooling
+        };
+
+        return {
+            transmissionTransfer,
+            ventilationTransfer,
+            totalTransfer
+        };
+    });
+
+    // combine our heat transfer data and gains data into a single monthly results array
+    results.monthly = results.monthly.map((v, idx) => _.extend(v, monthlyHeatTransfer[idx]));
 
     // 12.2.1.1/12.2.1.2 - heat balance ratios
-    let heatBalanceRatioHeating = heatingHeatGain / coolingHeatTransfer;
-    let heatBalanceRatioCooling = coolingHeatGain / coolingHeatTransfer;
+    // let heatBalanceRatioHeating = heatingHeatGain / coolingHeatTransfer;
+    // let heatBalanceRatioCooling = coolingHeatGain / coolingHeatTransfer;
 
     // calculate global dynamic parameters, which are dependent on some of the values we just calculated above
     // NOTE: we need to identify if we are in a heating or cooling dominated climate
     // and then pull out the relevant data for a representative month depending on which
     // see 12.2.1.3 (page 66) regarding the Building Time Constant to better understand why
     // internalHeatCapacityOfBuilding
-    let buildingTimeConstant = buildingTimeConstant();
-    let gainUtilizationFactor = gainUtilizationFactor(heatingHeatTransfer, heatingHeatGain, buildingTimeConstant);
-    let lossUtilizationFactor = lossUtilizationFactor(coolingHeatTransfer, coolingHeatGain, buildingTimeConstant);
+    // let buildingTimeConstant = buildingTimeConstant();
+    // let gainUtilizationFactor = gainUtilizationFactor(heatingHeatTransfer, heatingHeatGain, buildingTimeConstant);
+    // let lossUtilizationFactor = lossUtilizationFactor(coolingHeatTransfer, coolingHeatGain, buildingTimeConstant);
 
     // claculate total heating/cooling loads monthly now that we have our dynamic parameters
-    for(let month in MONTHS) {
-        results[month.id].energyForHeating = energyForHeating(results[month.id], gainUtilizationFactor);
-        results[month.id].energyForCooling = energyForCooling(results[month.id], lossUtilizationFactor);
-    }
+    // for(let month in MONTHS) {
+    //     results[month.id].energyForHeating = energyForHeating(results[month.id], gainUtilizationFactor);
+    //     results[month.id].energyForCooling = energyForCooling(results[month.id], lossUtilizationFactor);
+    // }
 
     // 7.4 - Length of heating and cooling seasons
     // * for each month, ratio of energy need for heating and cooling
+    
+    return results;
 }
 
 // 7.2.1.1 - Energy need for heating
@@ -125,117 +182,8 @@ function energyForCooling(data, lossUtilizationFactor) {
 }
 
 
-function basicEnergyDemands(month, setPointHeating, setPointCooling, climate, buildingEnvelope, airflowElements, components, elements) {
-    // 8.x, 9.x, 10.x, 11.x - individual calculations for transfers and gains
-    let transmissionTransfer = heatTransferByTransmission(month, setPointHeating, setPointCooling, climate, buildingEnvelope);
-    let ventilationTransfer = heatTransferByVentilation(month, setPointHeating, setPointCooling, climate, airflowElements);
-    let internalGain = heatGainInternal(month, components);
-    let solarGain = heatGainSolar(month, climate, elements);
-
-    // Total heat transfer
-    let heatingHeatTransfer = transmissionTransfer.heating + ventilationTransfer.heating;
-    let coolingHeatTransfer = transmissionTransfer.cooling + ventilationTransfer.cooling;
-
-    // Total heat gain (this is the same in both heating and cooling mode)
-    let heatingHeatGain = internalGain + solarGain;
-    let coolingHeatGain = internalGain + solarGain;
-
-    return {
-        transmissionTransfer,
-        ventilationTransfer,
-        internalGain,
-        solarGain,
-        heatingHeatTransfer,
-        coolingHeatTransfer,
-        heatingHeatGain,
-        coolingHeatGain
-    }
-}
-
-
-
-// Clause 8.x - Heat Transfer by Transmission (pages 33-38)
-// unit = megajoules
-//
-// Input:
-//  * a specific month of the year (1=January, 12=December)
-//  * set point of internal enviroment for heating
-//  * set point of internal enviroment for cooling
-//  * definition of climate
-//  * definition of all externally facing building elements (walls, roofs, windows, etc)
-//
-// NOTE: we are specifically doing the calculations for both heating and cooling
-//       mode and including both results in the output of this function.
-//
-// Output:
-//  * object containing 3 attributes: coefficient, heating, cooling
-//
-// Example Input:
-//   transferCoefficient = 18.2 W/K
-//   january = 2.678400 Ms
-//   set points = 20C for heating, 26C for cooling
-//   external temp january = 3.2C
-//
-// Example Output:
-//   {
-//      coefficient: 18.2,
-//      heating: 818.947584,
-//      cooling: 1111.428864
-//   }
-export function heatTransferTransmission(month, setPointHeating, setPointCooling, climate, transferCoefficient) {
-
-    // other values we need for the calculations
-    let climateExternalTemp = climate.temp;
-    let timePeriodSeconds = MONTHS[month].seconds;
-
-    // run the calculation for both heating and cooling modes
-    return {
-        heating: heatTransferByTransmission(transferCoefficient, setPointHeating, climateExternalTemp, timePeriodSeconds),
-        cooling: heatTransferByTransmission(transferCoefficient, setPointCooling, climateExternalTemp, timePeriodSeconds)
-    }
-}
-
 
 // Clause 9.x - Heat Transfer by Ventilation (pages 38-46)
-// unit = megajoules
-//
-// Required:
-//  * definition of climate
-//  * definition of all air flow building elements (air infiltration, natural ventilation, etc)
-//  * a specific month of the year (1=January, 12=December)
-//  * set point for internal enviroment in heating and cooling mode
-//
-// NOTE: we are specifically doing the calculations for both heating and cooling
-//       mode and including both results in the output of this function.
-//
-// Output:
-//   {
-//      coefficient: 7.7,
-//      heating: 346.47,
-//      cooling: 470.21
-//   }
-//
-// Calculation Example:
-//   transferCoefficient = 7.7 W/K
-//   january = 2.678400 Ms
-//   set points = 20C for heating, 26C for cooling
-//   external temp january = 3.2C
-// Result:
-//   heating = 346.477824 MJ (96 kWh)
-//   cooling = 470.219904 MJ (131 kWh)
-export function heatTransferVentilation(month, setPointHeating, setPointCooling, climate, transferCoefficient) {
-
-    // other values we need for the calculations
-    let climateExternalTemp = climate[month].temp;
-    let timePeriodSeconds = MONTHS[month].seconds;
-
-    // we run the calculation below for both set points!
-    return {
-        heating: heatTransferByVentilationInternal(transferCoefficient, setPointHeating, climateExternalTemp, timePeriodSeconds),
-        cooling: heatTransferByVentilationInternal(transferCoefficient, setPointCooling, climateExternalTemp, timePeriodSeconds)
-    }
-}
-
 export function heatTransferVentilationCoefficient(month, settings, hourlyConditions, climate) {
     // q = air flow rate
     // H = coefficient
@@ -329,9 +277,9 @@ export function heatTransferVentilationCoefficient(month, settings, hourlyCondit
 function avgCoeff(month, hourlyVentilationCoeffs) {
     let avgWeekday = hourlyVentilationCoeffs.weekday.reduce((acc, val) => acc + val, 0)/24;
     let avgWeekend = hourlyVentilationCoeffs.weekend.reduce((acc, val) => acc + val, 0)/24;
-    let totalWeekday = (MONTHS[month].days - MONTHS[month].weekend_cnt) * avgWeekday;
-    let totalWeekend = MONTHS[month].weekend_cnt * avgWeekend;
-    return (totalWeekday + totalWeekend) / MONTHS[month].days;
+    let totalWeekday = (month.days - month.weekend_cnt) * avgWeekday;
+    let totalWeekend = month.weekend_cnt * avgWeekend;
+    return (totalWeekday + totalWeekend) / month.days;
 }
 
 
@@ -375,10 +323,10 @@ export function heatGainInternal(month, hourlyConditions, settings) {
     output.total_rate = output.occupancy_rate + output.appliance_rate + output.lighting_rate;
 
     // final monthly gains is given by multiplying the avg by the timeperiod in megaseconds
-    output.occupancy = output.occupancy_rate * MONTHS[month].megaseconds;
-    output.appliance = output.appliance_rate * MONTHS[month].megaseconds;
-    output.lighting = output.lighting_rate * MONTHS[month].megaseconds;
-    output.total = output.total_rate  * MONTHS[month].megaseconds;
+    output.occupancy = output.occupancy_rate * month.megaseconds;
+    output.appliance = output.appliance_rate * month.megaseconds;
+    output.lighting = output.lighting_rate * month.megaseconds;
+    output.total = output.total_rate  * month.megaseconds;
 
     // the second thing we need to calculate is total gains per hour-of-day also
     // broken out between weekend and weekday usage scenarios
@@ -396,9 +344,9 @@ export function heatGainInternal(month, hourlyConditions, settings) {
 function avgFlowRate(month, flowRates, floorArea, attr) {
     let avgRateWeekday = flowRates.reduce((val, data) => val + data[attr+"_rate_wd"], 0)/24;
     let avgRateWeekend = flowRates.reduce((val, data) => val + data[attr+"_rate_we"], 0)/24;
-    let totalWeekdayRate = (MONTHS[month].days - MONTHS[month].weekend_cnt) * avgRateWeekday;
-    let totalWeekendRate = MONTHS[month].weekend_cnt * avgRateWeekend;
-    return ((totalWeekdayRate + totalWeekendRate) / MONTHS[month].days) * floorArea;
+    let totalWeekdayRate = (month.days - month.weekend_cnt) * avgRateWeekday;
+    let totalWeekendRate = month.weekend_cnt * avgRateWeekend;
+    return ((totalWeekdayRate + totalWeekendRate) / month.days) * floorArea;
 }
 
 
@@ -431,12 +379,7 @@ function avgFlowRate(month, flowRates, floorArea, attr) {
 //  * "air temperature delta" requires having average air temps and sky temps.
 //  * "radiative heat transfer coefficient" requires avg of surface and sky temp.
 //
-export function heatGainSolar(month, climate, buildingElements) {
-    // separate walls from windows
-    let walls = buildingElements.filter((elem) => elem.type === "wall" || elem.type === "roof");
-    let windows = buildingElements.filter((elem) => elem.type === "window");
-    // TODO: how to account for "sunspaces"??
-
+export function heatGainSolar(month, climate, walls, windows) {
     // TODO: shading reduction factor - accounts for effects of external shading.
     // by setting this to 1.0 we are saying there is no shading (yet!)
     let globalShadeReductionFactor = 1.0;
@@ -463,7 +406,7 @@ export function heatGainSolar(month, climate, buildingElements) {
         let heatFlowRate = solarHeatFlowRateForElement(globalShadeReductionFactor, effectiveCollectingArea, solarIrradiance, formFactor, radiationToSky);
 
         // solar gain (MJ)
-        let gain = heatFlowRate * MONTHS[month].megaseconds;
+        let gain = heatFlowRate * month.megaseconds;
 
         return {
             id: wall.id,
@@ -490,7 +433,7 @@ export function heatGainSolar(month, climate, buildingElements) {
         let formFactor = (win.type === "roof") ? 1.0 : 0.5;
 
         // effective collecting area
-        let effectiveCollectingArea = effectiveSolarCollectingAreaForGlazedElement(win.area, frameAreaFraction, win.solar_transmittance[month-1], shadeReductionFactor);
+        let effectiveCollectingArea = effectiveSolarCollectingAreaForGlazedElement(win.area, frameAreaFraction, win.solar_transmittance[month.id], shadeReductionFactor);
 
         // calculate radiation to sky for our wall
         let radiationToSky = thermalRadiationToSky(win.area, win.u_value, win.emissivity, surfaceHR, climate.temp, climate.sky_temp);
@@ -499,7 +442,7 @@ export function heatGainSolar(month, climate, buildingElements) {
         let heatFlowRate = solarHeatFlowRateForElement(shadeReductionFactor, effectiveCollectingArea, solarIrradiance, formFactor, radiationToSky);
 
         // solar gain (MJ)
-        let gain = heatFlowRate * MONTHS[month].megaseconds;
+        let gain = heatFlowRate * month.megaseconds;
 
         return {
             id: win.id,
@@ -510,7 +453,7 @@ export function heatGainSolar(month, climate, buildingElements) {
 
     // calculate the total monthly flow rate and gains
     let totalHeatFlowRate = wallGains.reduce((a, v) => a + v.heatFlowRate, 0) + windowGains.reduce((a, v) => a + v.heatFlowRate, 0);
-    let totalGains = totalHeatFlowRate * MONTHS[month].megaseconds;
+    let totalGains = totalHeatFlowRate * month.megaseconds;
 
     // detailed gains per hour-of-day
     // NOTE: we can do these next 2 things ahead of time in the climate data
@@ -529,7 +472,6 @@ export function heatGainSolar(month, climate, buildingElements) {
 
 
 // Clause 13.x - Indoor Conditions a.k.a. Set Points (pages 68-76)
-//
 export function indoorConditions(settings, hourlyConditions, heatTransferCoefficient, hourlyHeatGains, hourlyHve, climate) {
 
     let tMass = thermalMass(settings.heat_capacity_type, settings.floor_area);
@@ -658,7 +600,7 @@ export function indoorConditions(settings, hourlyConditions, heatTransferCoeffic
         // take the daily averages and aggregate them to monthly averages
         let finalAverages = new Array(12);
         for (let i = 0; i < 12; i++) {
-            let mon = MONTHS[i+1];
+            let mon = MONTHS[i];
             let total = mon.dow_cnt.reduce(function(tot, val, idx) {
                 if (idx === 0) {
                     // sunday

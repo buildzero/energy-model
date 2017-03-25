@@ -6,27 +6,23 @@ import {MathHelper} from "util/math";
 // TRANSMISSION HEAT TRANSFER
 export let heatTransferCoeffiecient = 415.5130;
 
-// TODO: some of the decimal place values are off from what's in EPC !?
 export let transmissionHeatTransfer = [
-    { heating: 16710.0624, cooling: 22384.568 },
-    { heating: 11841.0228, cooling: 16299.6276 },
-    { heating: 7528.4668, cooling: 11822.0736 },
-    { heating: 3784.9955, cooling: 8310.8056 },
-    { heating: 125.6832, cooling: 4619.2799 },
-    { heating: -4087.8506, cooling: 485.8865 },
-    { heating: -5632.4621, cooling: -480.9129 },
-    { heating: -6176.7997, cooling: -1273.6521 },
-    { heating: -1646.9277, cooling: 2775.2741 },
-    { heating: 5144.2229, cooling: 9571.1564 },
-    { heating: 8984.5947, cooling: 13271.9549 },
-    { heating: 13187.4284, cooling: 18306.9258 }
+    { heating: 16700.22698, cooling: 22380.17246 },
+    { heating: 11841.00699, cooling: 16299.59826 },
+    { heating: 7528.42164, cooling: 11822.11129 },
+    { heating: 3785.00556, cooling: 8310.79311 },
+    { heating: 125.66011, cooling: 4619.25880 },
+    { heating: -4087.85014, cooling: 485.86831 },
+    { heating: -5632.46154, cooling: -480.85837 },
+    { heating: -6176.80019, cooling: -1273.67804 },
+    { heating: -1646.92733, cooling: 2775.27206 },
+    { heating: 5144.26519, cooling: 9571.15600 },
+    { heating: 8984.60145, cooling: 13271.94463 },
+    { heating: 13187.46418, cooling: 18306.90977 }
 ];
 
 
 // VENTILATION HEAT TRANSFER
-
-
-
 export let ventilationCoefficientDetailed = [
     {
         heating: {
@@ -174,21 +170,27 @@ export let ventilationCoefficientDetailed = [
     }
 ];
 
-
-export let ventilationHeatTransferCoefficient = [
-    { heating: 16710.0613, cooling: 22384.6782 },
-    { heating: 11841.0228, cooling: 16299.9291 },
-    { heating: 7528.4668, cooling: 11823.0753 },
-    { heating: 3784.9955, cooling: 8315.2214 },
-    { heating: 125.6832, cooling: 4619.8364 },
-    { heating: -4087.8506, cooling: 486.1019 },
-    { heating: -5632.4621, cooling: -480.8016 },
-    { heating: -6176.7997, cooling: -1273.5408 },
-    { heating: -1646.9277, cooling: 2776.028 },
-    { heating: 5144.2229, cooling: 9573.8274 },
-    { heating: 8984.5947, cooling: 13272.4934 },
-    { heating: 13187.4284, cooling: 18307.1483 }
+export let ventilationHeatTransfer = [
+    { heating: 5095.11638, cooling: 6925.06128 },
+    { heating: 3895.56940, cooling: 5395.82691 },
+    { heating: 2414.38362, cooling: 3818.01967 },
+    { heating: 1033.20923, cooling: 2305.25763 },
+    { heating: 34.07879, cooling: 1257.18336 },
+    { heating: -1156.48953, cooling: 137.31892 },
+    { heating: -1420.45934, cooling: -120.94748 },
+    { heating: -1661.16215, cooling: -341.62398 },
+    { heating: -411.36152, cooling: 698.76864 },
+    { heating: 1460.07131, cooling: 2740.75986 },
+    { heating: 2634.20147, cooling: 3942.62978 },
+    { heating: 3995.62078, cooling: 5580.10206 }
 ];
+
+
+// TOTAL HEAT TRANSFER
+export let totalHeatTransfer = transmissionHeatTransfer.map((v, idx) => ({
+    heating: v.heating + ventilationHeatTransfer.heating,
+    cooling: v.cooling + ventilationHeatTransfer.cooling
+}));
 
 // INTERNAL GAINS
 let internalGainsDetailed = [
@@ -361,10 +363,27 @@ export let totalGainsDetailed = internalGainsDetailed.map((intGains, idx) => ({
 
 // INDOOR CONDITIONS
 export let averageIndoorConditions = {
-    heating: [18.9741, 19.7124, 20.5312, 20.7238, 20.9464, 21, 21, 21, 21, 20.6535, 20.288, 19.5393],
-    cooling: [24.0729, 24.1479, 24.3892, 24.926, 24.9841, 25.2467, 25.6289, 25.4057, 25.106, 24.6313, 24.2688, 24.1394]
+    heating: [18.9653, 19.7124, 20.5312, 20.7238, 20.9464, 21, 21, 21, 21, 20.6535, 20.288, 19.5393],
+    cooling: [24.069, 24.1479, 24.3892, 24.926, 24.9841, 25.2467, 25.6289, 25.4057, 25.106, 24.6313, 24.2688, 24.1394]
 };
 
+// COMPLETE RESULT
+export let completeResult = {
+    global: {
+        transmissionHeatTransferCoeff: heatTransferCoeffiecient,
+        indoorConditions: averageIndoorConditions
+    },
+    monthly: [0,0,0,0,0,0,0,0,0,0,0,0].map((v, idx) => ({
+        internalGain: internalGains[idx],
+        solarGain: solarGains[idx],
+        totalGain: internalGains[idx].total + solarGains[idx].total,
+        totalGainHourly: totalGainsDetailed,
+        ventilationTransferCoeffs: ventilationCoefficientDetailed,
+        transmissionTransfer: transmissionHeatTransfer[idx],
+        ventilationTransfer: ventilationHeatTransfer[idx],
+        totalTransfer: totalHeatTransfer[idx]
+    }))
+};
 
 
 //=========   INPUTS   ==========
@@ -529,7 +548,7 @@ export let climate = [
         sky_cover: 0.616689098,
         sky_temp: 260.3223678,
         solar_transmittance: 0.9243,
-        hourly_horiz_solar_rad: [0, 0, 0, 0, 0, 0, 0, 8.58064516129032, 72.74193548387100, 205.90322580645200, 317.45161290322600, 433.12903225806500, 462.41935483871000, 433.74193548387100, 378.12903225806500, 274.00000000000000, 151.90322580645200, 38.61290322580640, 0.16129032258065, 0, 0, 0, 0, 0],
+        hourly_horiz_solar_rad: [0, 0, 0, 0, 0, 0, 0, 8.58065, 72.74194, 205.90323, 317.45161, 433.12903, 462.41935, 433.74194, 378.12903, 274.00000, 151.90323, 38.61290, 0.16129, 0, 0, 0, 0, 0],
         hourly_dry_bulb_temp: [2.6161, 2.2645, 1.8677, 1.5387, 1.1613, 0.9548, 0.8258, 0.7871, 1.5065, 2.9677, 4.2516, 5.5968, 6.5226, 7.2419, 7.8129, 7.8258, 7.2581, 6.4677, 5.6032, 5.0935, 4.4710, 4.0258, 3.4355, 3.1323],
         hourly_wind_speed: [4.229032, 4.270968, 4.312903, 4.219355, 4.151613, 4.061290, 4.370968, 4.261290, 4.354839, 4.893548, 5.183871, 4.970968, 5.058065, 5.045161, 4.877419, 5.141935, 4.825806, 4.538710, 4.470968, 4.522581, 4.541935, 4.451613, 4.448387, 4.312903]
     },

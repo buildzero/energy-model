@@ -1,4 +1,24 @@
 
+// basic data about the months of the year
+// NOTE: weekend_cnt is the number of days of the month which fall on a weekend (sat/sun)
+// NOTE: dow_cnt is number of days for any given day-of-week within the given month
+//       the values start on Sunday, e.g. 0=sun, 1=mon, ..., 6=sat
+export const MONTHS = [
+    {id: 0, days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
+    {id: 1, days: 28, hours: 672, seconds: 2419200, megaseconds: 2419200/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 4, 4, 4]},
+    {id: 2, days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 5, 4]},
+    {id: 3, days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 4, 5]},
+    {id: 4, days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 5, 5, 5, 4, 4, 4]},
+    {id: 5, days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 4, 5, 5, 4]},
+    {id: 6, days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 10, dow_cnt: [5, 5, 4, 4, 4, 4, 5]},
+    {id: 7, days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 5, 5, 5, 4, 4]},
+    {id: 8, days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 9, dow_cnt: [4, 4, 4, 4, 4, 5, 5]},
+    {id: 9, days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 9, dow_cnt: [5, 5, 5, 4, 4, 4, 4]},
+    {id: 10, days: 30, hours: 720, seconds: 2592000, megaseconds: 2592000/1000000, weekend_cnt: 8, dow_cnt: [4, 4, 4, 5, 5, 4, 4]},
+    {id: 11, days: 31, hours: 744, seconds: 2678400, megaseconds: 2678400/1000000, weekend_cnt: 10, dow_cnt: [5, 4, 4, 4, 4, 5, 5]}
+];
+
+
 // takes in the original input on building usage per hour and does summary work
 // to calculate things like how much of the usage is daytime vs nighttime, what
 // fraction of a typical week is active vs inactive, etc.
