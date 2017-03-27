@@ -171,7 +171,7 @@ export let ventilationCoefficientDetailed = [
 ];
 
 export let ventilationHeatTransfer = [
-    { heating: 5095.11638, cooling: 6925.06128 },
+    { heating: 5098.11810, cooling: 6926.40722 },
     { heating: 3895.56940, cooling: 5395.82691 },
     { heating: 2414.38362, cooling: 3818.01967 },
     { heating: 1033.20923, cooling: 2305.25763 },
@@ -363,8 +363,8 @@ export let totalGainsDetailed = internalGainsDetailed.map((intGains, idx) => ({
 
 // INDOOR CONDITIONS
 export let averageIndoorConditions = {
-    heating: [18.9653, 19.7124, 20.5312, 20.7238, 20.9464, 21, 21, 21, 21, 20.6535, 20.288, 19.5393],
-    cooling: [24.069, 24.1479, 24.3892, 24.926, 24.9841, 25.2467, 25.6289, 25.4057, 25.106, 24.6313, 24.2688, 24.1394]
+    heating: [18.9741, 19.7124, 20.5312, 20.7238, 20.9464, 21, 21, 21, 21, 20.6535, 20.288, 19.5393],
+    cooling: [24.0729, 24.1479, 24.3892, 24.926, 24.9841, 25.2467, 25.6289, 25.4057, 25.106, 24.6313, 24.2688, 24.1394]
 };
 
 // COMPLETE RESULT
