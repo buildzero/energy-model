@@ -39,27 +39,8 @@ import {MONTHS, summarizeUsageConditions} from "util/schedule";
 // ISO 13790-2008
 
 // Clause 7.x - Building energy need for space heating and cooling (pages 21-32)
-//
 // 7.1 - Overall calculation
-// 
-// Total Calculation Steps
-//  Global Calculations (only happens once)
-//    * transmission heat transfer coefficient     (building elements)
-//    * total heat capacity                        (settings)
-//
-//  Monthly Calculations
-//    * internal gains                             (building usage)
-//    * solar gains                                (building elements, climate)
-//    * ventilation heat transfer coefficient
-//    * internal conditions                        (settings, building usage, climate, gains, Hve, tranHtCoeff)
-//    * transmission heat transfer                 (internal conditions, climate, tranHtCoeff)
-//    * ventilation heat transfer                  (internal conditions, climate, ventHtCoeff)
-//    * gain/loss utilization factors
-//    * heat gain/loss ratios
-//    * building time constant
-//
-//  Totals Calculations (summing individual monthly parts)
-export function energyDemand(settings, hourlyConditions, buildingElements, climateData) {
+export function thermalDemand(settings, hourlyConditions, buildingElements, climateData) {
     // some of the final calculations require the ability to reference values from
     // different months for things like our dynamic parameters, so what we do is
     // take 2 passes over calculations for each month.  the first pass calculates
@@ -153,8 +134,8 @@ export function energyDemand(settings, hourlyConditions, buildingElements, clima
         let params = {heating: {}, cooling: {}};
 
         // 6.1 Heat Balance Ratio
-        // params.heating.heatBalanceRatio = monthData.totalGain / monthData.totalTransfer.heating;
-        // params.cooling.heatBalanceRatio = monthData.totalGain / monthData.totalTransfer.cooling;
+        params.heating.heatBalanceRatio = monthData.totalGain / monthData.totalTransfer.heating;
+        params.cooling.heatBalanceRatio = monthData.totalGain / monthData.totalTransfer.cooling;
 
         // 6.2 Building Time Constant = heat capacity / 3600 / (transmissionCoeff + ventilationCoeff)
         params.heating.buildingTimeConstant = buildingTimeConstant(results.global.buildingHeatCapacity, results.global.transmissionHeatTransferCoeff, monthData.ventilationTransferCoeffs.heating.average);
@@ -175,13 +156,17 @@ export function energyDemand(settings, hourlyConditions, buildingElements, clima
     results.monthly = results.monthly.map((v, idx) => _.extend(v, {dynamicParameters: dynamicParameters[idx]}));
 
     // claculate total heating/cooling loads monthly now that we have our dynamic parameters
-    // for(let month in MONTHS) {
-    //     results[month.id].energyForHeating = energyForHeating(results[month.id], gainUtilizationFactor);
-    //     results[month.id].energyForCooling = energyForCooling(results[month.id], lossUtilizationFactor);
-    // }
+    let totalDemand = MONTHS.map((month, monthIndex) => {
+        let monthData = results.monthly[monthIndex];
 
-    // 7.4 - Length of heating and cooling seasons
-    // * for each month, ratio of energy need for heating and cooling
+        return {
+            energyForHeating: energyForHeating(monthData.dynamicParameters.heating.utilizationFactor, monthData.totalTransfer.heating, monthData.totalGain),
+            energyForCooling: energyForCooling(monthData.dynamicParameters.cooling.utilizationFactor, monthData.totalTransfer.cooling, monthData.totalGain)
+        };
+    });
+    
+    // combine our dynamic parameters data into our monthly results array
+    results.monthly = results.monthly.map((v, idx) => _.extend(v, totalDemand[idx]));
     
     return results;
 }
@@ -191,8 +176,8 @@ export function energyDemand(settings, hourlyConditions, buildingElements, clima
 // Required:
 //  * basic energy demand calculations for the given time period
 //  * gain utilization factor for the given building definition
-function energyForHeating(data, gainUtilizationFactor) {
-    return data.heatingHeatTransfer - (gainUtilizationFactor * data.heatingHeatGain);
+function energyForHeating(gainUtilizationFactor, heatTransfer, heatGain) {
+    return heatTransfer - (gainUtilizationFactor * heatGain);
 }
 
 // 7.2.1.2 - Energy need for cooling
@@ -200,8 +185,8 @@ function energyForHeating(data, gainUtilizationFactor) {
 // Required:
 //  * basic energy demand calculations for the given time period
 //  * loss utilization factor for the given building definition
-function energyForCooling(data, lossUtilizationFactor) {
-    return data.coolingHeatGain - (lossUtilizationFactor * data.coolingHeatTransfer);
+function energyForCooling(lossUtilizationFactor, heatTransfer, heatGain) {
+    return heatGain - (lossUtilizationFactor * heatTransfer);
 }
 
 

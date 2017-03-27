@@ -192,6 +192,7 @@ export let totalHeatTransfer = transmissionHeatTransfer.map((v, idx) => ({
     cooling: v.cooling + ventilationHeatTransfer[idx].cooling
 }));
 
+
 // INTERNAL GAINS
 let internalGainsDetailed = [
     {
@@ -362,6 +363,7 @@ export let totalGainsDetailed = internalGainsDetailed.map((intGains, idx) => ({
 
 export let totalGains = internalGains.map((intGains, idx) => intGains.total + solarGains[idx].total);
 
+
 // INDOOR CONDITIONS
 export let averageIndoorConditions = {
     heating: [18.9741, 19.7124, 20.5312, 20.7238, 20.9464, 21, 21, 21, 21, 20.6535, 20.288, 19.5393],
@@ -377,11 +379,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 44.74909,
             dimensionlessNumericalParameter: 3.98327,
+            heatBalanceRatio: 0.85467,
             utilizationFactor: 0.85676
         },
         cooling: {
             buildingTimeConstant: 44.60091,
             dimensionlessNumericalParameter: 3.97339,
+            heatBalanceRatio: 0.63590,
             utilizationFactor: 0.59308
         }
     },
@@ -389,11 +393,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 43.94444,
             dimensionlessNumericalParameter: 3.92963,
+            heatBalanceRatio: 1.10582,
             utilizationFactor: 0.75523
         },
         cooling: {
             buildingTimeConstant: 43.87673,
             dimensionlessNumericalParameter: 3.92512,
+            heatBalanceRatio: 0.80209,
             utilizationFactor: 0.70126
         }
     },
@@ -401,11 +407,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 44.22018,
             dimensionlessNumericalParameter: 3.94801,
+            heatBalanceRatio: 2.14123,
             utilizationFactor: 0.45441
         },
         cooling: {
             buildingTimeConstant: 44.14486,
             dimensionlessNumericalParameter: 3.94299,
+            heatBalanceRatio: 1.36123,
             utilizationFactor: 0.89944
         }
     },
@@ -413,11 +421,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 45.87815,
             dimensionlessNumericalParameter: 4.05854,
+            heatBalanceRatio: 4.13768,
             utilizationFactor: 0.24111
         },
         cooling: {
             buildingTimeConstant: 45.71987,
             dimensionlessNumericalParameter: 4.04799,
+            heatBalanceRatio: 1.87793,
             utilizationFactor: 0.96195
         }
     },
@@ -425,11 +435,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 45.94225,
             dimensionlessNumericalParameter: 4.06282,
+            heatBalanceRatio: 130.02899,
             utilizationFactor: 0.00769
         },
         cooling: {
             buildingTimeConstant: 45.90747,
             dimensionlessNumericalParameter: 4.06050,
+            heatBalanceRatio: 3.53457,
             utilizationFactor: 0.99574
         }
     },
@@ -437,11 +449,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 45.52287,
             dimensionlessNumericalParameter: 4.03486,
+            heatBalanceRatio: -3.73113,
             utilizationFactor: -0.26802
         },
         cooling: {
             buildingTimeConstant: 45.53292,
             dimensionlessNumericalParameter: 4.03553,
+            heatBalanceRatio: 31.39878,
             utilizationFactor: 1
         }
     },
@@ -449,11 +463,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 46.63959,
             dimensionlessNumericalParameter: 4.10931,
+            heatBalanceRatio: -2.83370,
             utilizationFactor: -0.35290
         },
         cooling: {
             buildingTimeConstant: 46.66446,
             dimensionlessNumericalParameter: 4.11096,
+            heatBalanceRatio: -33.20983,
             utilizationFactor: 1
         }
     },
@@ -461,11 +477,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 46.02416,
             dimensionlessNumericalParameter: 4.06828,
+            heatBalanceRatio: -2.73758,
             utilizationFactor: -0.36529
         },
         cooling: {
             buildingTimeConstant: 46.05019,
             dimensionlessNumericalParameter: 4.07001,
+            heatBalanceRatio: -13.28363,
             utilizationFactor: 1
         }
     },
@@ -473,11 +491,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 46.72977,
             dimensionlessNumericalParameter: 4.11532,
+            heatBalanceRatio: -9.32467,
             utilizationFactor: -0.10724
         },
         cooling: {
             buildingTimeConstant: 46.65478,
             dimensionlessNumericalParameter: 4.11032,
+            heatBalanceRatio: 5.52465,
             utilizationFactor: 0.99927
         }
     },
@@ -485,11 +505,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 45.49039,
             dimensionlessNumericalParameter: 4.03269,
+            heatBalanceRatio: 3.02599,
             utilizationFactor: 0.32792
         },
         cooling: {
             buildingTimeConstant: 45.40088,
             dimensionlessNumericalParameter: 4.02673,
+            heatBalanceRatio: 1.62320,
             utilizationFactor: 0.94016
         }
     },
@@ -497,11 +519,13 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 45.16094,
             dimensionlessNumericalParameter: 4.01073,
+            heatBalanceRatio: 1.61258,
             utilizationFactor: 0.58199
         },
         cooling: {
             buildingTimeConstant: 45.02604,
             dimensionlessNumericalParameter: 4.00174,
+            heatBalanceRatio: 1.08840,
             utilizationFactor: 0.83244
         }
     },
@@ -509,15 +533,22 @@ export let dynamicParameters = [
         heating: {
             buildingTimeConstant: 44.82143,
             dimensionlessNumericalParameter: 3.98810,
+            heatBalanceRatio: 1.04567,
             utilizationFactor: 0.78128
         },
         cooling: {
             buildingTimeConstant: 44.75883,
             dimensionlessNumericalParameter: 3.98392,
+            heatBalanceRatio: 0.75220,
             utilizationFactor: 0.67313
         }
     }
 ];
+
+
+// TOTAL DEMAND
+let heatingDemand = [5839.25650, 2594.24551, 268.48110, 11.47980, 0, 0, 0, 0, 0, 51.05783, 714.55711, 3145.04875];
+let coolingDemand = [1255.21050, 2187.51093, 7222.43655, 9724.10386, 14919.30093, 18944.12968, 20587.67574, 23072.38401, 15721.35263, 8409.43724, 4406.12163, 1888.88818];
 
 
 // COMPLETE RESULT
@@ -531,12 +562,14 @@ export let completeResult = {
         internalGain: internalGains[idx],
         solarGain: solarGains[idx],
         totalGain: internalGains[idx].total + solarGains[idx].total,
-        totalGainHourly: totalGainsDetailed,
-        ventilationTransferCoeffs: ventilationCoefficientDetailed,
+        totalGainHourly: totalGainsDetailed[idx],
+        ventilationTransferCoeffs: ventilationCoefficientDetailed[idx],
         transmissionTransfer: transmissionHeatTransfer[idx],
         ventilationTransfer: ventilationHeatTransfer[idx],
         totalTransfer: totalHeatTransfer[idx],
-        dynamicParameters: dynamicParameters[idx]
+        dynamicParameters: dynamicParameters[idx],
+        energyForHeating: heatingDemand[idx],
+        energyForCooling: coolingDemand[idx]
     }))
 };
 
