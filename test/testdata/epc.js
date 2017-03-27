@@ -7,7 +7,7 @@ import {MathHelper} from "util/math";
 export let heatTransferCoeffiecient = 415.5130;
 
 export let transmissionHeatTransfer = [
-    { heating: 16700.22698, cooling: 22380.17246 },
+    { heating: 16710.06569, cooling: 22384.52220 },
     { heating: 11841.00699, cooling: 16299.59826 },
     { heating: 7528.42164, cooling: 11822.11129 },
     { heating: 3785.00556, cooling: 8310.79311 },

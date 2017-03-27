@@ -21,9 +21,9 @@
 //   external temp january = 3.2C
 // Result:
 //   818.947584 MJ
-export function heatTransferByTransmission(transferCoefficient, setPoint, climateExternalTemp, timePeriodSeconds) {
+export function heatTransferByTransmission(transferCoefficient, setPoint, climateExternalTemp, timePeriod) {
     // W/K (watts/kelvin) * C (celsius) * Ms (megasecond) = MJ (megajoule)
-    return transferCoefficient * (setPoint - climateExternalTemp) * (timePeriodSeconds / 1000000);
+    return transferCoefficient * (setPoint - climateExternalTemp) * timePeriod;
 }
 
 
