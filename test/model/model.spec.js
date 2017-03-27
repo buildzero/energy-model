@@ -28,14 +28,15 @@ import {
 
 describe("Total Calculation", function() {
     let results = energyDemand(buildingSettings, hourlyConditions, buildingElements, climate);
-
+    
     it("matches global results", function() {
         expect(results.global).toHaveCloseValuesTo(completeResult.global);
     });
 
     for (let mon = 0; mon < 12; mon++) {
         it("matches monthly results, month="+mon, function() {
-            // expect(results.monthly[mon]).toHaveCloseValuesTo(completeResult.monthly[mon], 3);
+            // expect(results.monthly[mon]).toHaveCloseValuesTo(completeResult.monthly[mon], 0);
+            expect(results.monthly[mon].dynamicParameters).toHaveCloseValuesTo(completeResult.monthly[mon].dynamicParameters, 4);
         });
     }
 });

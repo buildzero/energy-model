@@ -23,6 +23,13 @@ import {
     airInfiltrationRate
 } from "model/ventilation";
 
+import {
+    dimensionlessNumericalParameter,
+    buildingTimeConstant,
+    gainUtilizationFactor,
+    lossUtilizationFactor
+} from "model/dynamic_parameters";
+
 import {internalHeatCapacityByType, thermalMass, vsite, heatRecoveryEfficiency, windowOpeningAngleCk} from "util/building";
 import {surfaceHeatResistence} from "util/climate";
 import {MathHelper} from "util/math";
@@ -73,8 +80,9 @@ export function energyDemand(settings, hourlyConditions, buildingElements, clima
     results.global.transmissionHeatTransferCoeff = heatTransferByTransmissionCoefficient(walls, windows);
 
     // 2. Global Heat Capacity
+    results.global.buildingHeatCapacity = internalHeatCapacityByType(settings.heat_capacity_type) * settings.floor_area;
 
-    // calculate monthly gains and ventilation transfer coefficients
+    // 3.* calculate monthly gains and ventilation transfer coefficients
     results.monthly = MONTHS.map((month, monthIndex) => {
         let climate = climateData[monthIndex];
 
@@ -106,7 +114,7 @@ export function energyDemand(settings, hourlyConditions, buildingElements, clima
     // 4. Indoor Conditions
     results.global.indoorConditions = indoorConditions(settings, hourlyConditions, results.global.transmissionHeatTransferCoeff, results.monthly.map((v) => v.totalGainHourly), results.monthly.map((v) => v.ventilationTransferCoeffs), climateData);
     
-    // calculate monthly heat transfer
+    // 5.* calculate monthly heat transfer
     let monthlyHeatTransfer = MONTHS.map((month, monthIndex) => {
         let climate = climateData[monthIndex];
 
@@ -138,18 +146,33 @@ export function energyDemand(settings, hourlyConditions, buildingElements, clima
     // combine our heat transfer data and gains data into a single monthly results array
     results.monthly = results.monthly.map((v, idx) => _.extend(v, monthlyHeatTransfer[idx]));
 
-    // 12.2.1.1/12.2.1.2 - heat balance ratios
-    // let heatBalanceRatioHeating = heatingHeatGain / coolingHeatTransfer;
-    // let heatBalanceRatioCooling = coolingHeatGain / coolingHeatTransfer;
+    // 6.* calculate dynamic parameters
+    let dynamicParameters = MONTHS.map((month, monthIndex) => {
+        let monthData = results.monthly[monthIndex];
 
-    // calculate global dynamic parameters, which are dependent on some of the values we just calculated above
-    // NOTE: we need to identify if we are in a heating or cooling dominated climate
-    // and then pull out the relevant data for a representative month depending on which
-    // see 12.2.1.3 (page 66) regarding the Building Time Constant to better understand why
-    // internalHeatCapacityOfBuilding
-    // let buildingTimeConstant = buildingTimeConstant();
-    // let gainUtilizationFactor = gainUtilizationFactor(heatingHeatTransfer, heatingHeatGain, buildingTimeConstant);
-    // let lossUtilizationFactor = lossUtilizationFactor(coolingHeatTransfer, coolingHeatGain, buildingTimeConstant);
+        let params = {heating: {}, cooling: {}};
+
+        // 6.1 Heat Balance Ratio
+        // params.heating.heatBalanceRatio = monthData.totalGain / monthData.totalTransfer.heating;
+        // params.cooling.heatBalanceRatio = monthData.totalGain / monthData.totalTransfer.cooling;
+
+        // 6.2 Building Time Constant = heat capacity / 3600 / (transmissionCoeff + ventilationCoeff)
+        params.heating.buildingTimeConstant = buildingTimeConstant(results.global.buildingHeatCapacity, results.global.transmissionHeatTransferCoeff, monthData.ventilationTransferCoeffs.heating.average);
+        params.cooling.buildingTimeConstant = buildingTimeConstant(results.global.buildingHeatCapacity, results.global.transmissionHeatTransferCoeff, monthData.ventilationTransferCoeffs.cooling.average);
+
+        // 6.3 Dimensionless Numerical Parameter == 1 + buildingTimeConstant / 15
+        params.heating.dimensionlessNumericalParameter = dimensionlessNumericalParameter(params.heating.buildingTimeConstant);
+        params.cooling.dimensionlessNumericalParameter = dimensionlessNumericalParameter(params.cooling.buildingTimeConstant);
+
+        // 6.4 Gain/Loss Utilization Factor
+        params.heating.utilizationFactor = gainUtilizationFactor(monthData.totalGain / monthData.totalTransfer.heating, params.heating.dimensionlessNumericalParameter);
+        params.cooling.utilizationFactor = lossUtilizationFactor(monthData.totalGain / monthData.totalTransfer.cooling, params.cooling.dimensionlessNumericalParameter);
+
+        return params;
+    });
+
+    // combine our dynamic parameters data into our monthly results array
+    results.monthly = results.monthly.map((v, idx) => _.extend(v, {dynamicParameters: dynamicParameters[idx]}));
 
     // claculate total heating/cooling loads monthly now that we have our dynamic parameters
     // for(let month in MONTHS) {
