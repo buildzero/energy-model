@@ -13,13 +13,16 @@ import {MONTHS} from "util/schedule";
 describe("Ventilation Heat Transfer", function() {
 
     // Ventilation Heat Transfer
-    it("can calculate ventilation heat transfer", function() {
-        let ventilationHT_heating = heatTransferByVentilation(ventilationCoefficientDetailed[0].heating.average, averageIndoorConditions.heating[0], climate[0].temp, MONTHS[0].megaseconds);
-        expect(ventilationHT_heating).toBeCloseTo(ventilationHeatTransfer[0].heating, 1);
-
-        let ventilationHT_cooling = heatTransferByVentilation(ventilationCoefficientDetailed[0].cooling.average, averageIndoorConditions.cooling[0], climate[0].temp, MONTHS[0].megaseconds);
-        expect(ventilationHT_cooling).toBeCloseTo(ventilationHeatTransfer[0].cooling, 1);
-    });
+    for (let mon = 0; mon < 12; mon++) {
+        it("can calculate ventilation HT, mon="+mon, function() {
+            let heating = heatTransferByVentilation(ventilationCoefficientDetailed[mon].heating.average, averageIndoorConditions.heating[mon], climate[mon].temp, MONTHS[mon].megaseconds);
+            let cooling = heatTransferByVentilation(ventilationCoefficientDetailed[mon].cooling.average, averageIndoorConditions.cooling[mon], climate[mon].temp, MONTHS[mon].megaseconds);
+            
+            // TODO: better decimal precision
+            expect(heating).toHaveCloseValuesTo(ventilationHeatTransfer[mon].heating, 1);
+            expect(cooling).toHaveCloseValuesTo(ventilationHeatTransfer[mon].cooling, 1);
+        });
+    }
 
     // Mechanical Ventilation
     it("can calculate mechanical ventilation rates", function() {
