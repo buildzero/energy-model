@@ -1,3 +1,3 @@
 'use strict';
 
-exports.EnergyModel = require('./lib/model/model');
+module.exports = require('./lib/model/model');
