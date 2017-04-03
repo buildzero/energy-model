@@ -8,7 +8,20 @@ An implementation of ISO 13790-2008 and limited to only single-zone building def
 
 # Installation (npm)
 
+```
+npm install --save buildzero-energy-model
+```
+
 # Usage
+
+```
+var EnergyModel = require('buildzero-energy-model');
+
+// check out the example.js file to see what the input data structures are meant to look like.  
+// better docs coming once things are more finalized.
+var modelResults = EnergyModel.thermalDemand(buildingSettings, hourlyConditions, buildingElements, climateData);
+```
+
 
 # License
 
