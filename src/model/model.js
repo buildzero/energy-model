@@ -441,7 +441,7 @@ export function heatGainSolar(month, climate, walls, windows) {
         let formFactor = (win.type === "roof") ? 1.0 : 0.5;
 
         // effective collecting area
-        let effectiveCollectingArea = effectiveSolarCollectingAreaForGlazedElement(win.area, frameAreaFraction, win.solar_transmittance[month.id], shadeReductionFactor);
+        let effectiveCollectingArea = effectiveSolarCollectingAreaForGlazedElement(win.area, frameAreaFraction, climate.solar_transmittance, shadeReductionFactor);
 
         // calculate radiation to sky for our wall
         let radiationToSky = thermalRadiationToSky(win.area, win.u_value, win.emissivity, surfaceHR, climate.temp, climate.sky_temp);
