@@ -20,7 +20,7 @@ describe("Solar Gains", function() {
 
     // Glazed Element
     it("can calculate effective collecting area (glazed)", function() {
-        expect(MathHelper.round(effectiveSolarCollectingAreaForGlazedElement(31.5, 0.3, 0.92, 1.0), 2)).toBe(14.20);
+        expect(MathHelper.round(effectiveSolarCollectingAreaForGlazedElement(31.5, 0.3, 0.7 * 0.92, 1.0), 2)).toBe(14.20);
     });
 
     // Heat Flow Rate

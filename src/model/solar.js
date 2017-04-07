@@ -33,16 +33,7 @@ export function solarHeatFlowRateForElement(shadeReductionFactor, effectiveColle
 //  * effective collecting area (m2)
 export function effectiveSolarCollectingAreaForGlazedElement(area, frameAreaFraction, solarTransmittance, shadeReductionFactor) {
     // Asol = Fsh,gl * ggl * (1 − FF) * Aw,p
-
-    // 11.4.2 - Solar energy transmittance of glazed elements
-    // this is a value from 0-1 and is dependent on the orientation of the window
-    // correction factor for non-scattering window, default = 0.90
-    // NOTE: if the window is scattering or has a solar shading provision then this
-    //       calculation should be updated to account that.
-    // NOTE: the EPC use 0.70 for this value on windows so thats what we are following
-    let transmittance = 0.70 * solarTransmittance;
-
-    return shadeReductionFactor * transmittance * (1.0 - frameAreaFraction) * area;
+    return shadeReductionFactor * solarTransmittance * (1.0 - frameAreaFraction) * area;
 }
 
 
