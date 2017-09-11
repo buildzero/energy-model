@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./lib/model/model');
+module.exports = require('./lib/thermal/model');
