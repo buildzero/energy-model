@@ -1,7 +1,7 @@
 import {
     heatTransferByTransmission,
     heatTransferByTransmissionCoefficient
-} from "model/transmission";
+} from "thermal/transmission";
 
 import {MONTHS} from "util/schedule";
 import {MathHelper} from "util/math";

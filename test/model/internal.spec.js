@@ -1,4 +1,4 @@
-import {heatFlowRates} from 'model/internal';
+import {heatFlowRates} from 'thermal/internal';
 import {MathHelper} from 'util/math';
 
 function roundOutputs(output) {

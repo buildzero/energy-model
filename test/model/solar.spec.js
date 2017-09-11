@@ -3,7 +3,7 @@ import {
     effectiveSolarCollectingAreaForGlazedElement,
     effectiveSolarCollectingAreaForOpaqueElement,
     thermalRadiationToSky
-} from 'model/solar';
+} from 'thermal/solar';
 import {MathHelper} from "util/math";
 
 

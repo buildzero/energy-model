@@ -1,6 +1,6 @@
 {
   "name": "buildzero-energy-model",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Single zone building energy model built on ISO 13790",
   "author": "buildzero.org <devs@buildzero.org>",
   "license": "MIT",

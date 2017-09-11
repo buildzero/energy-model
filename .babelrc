@@ -2,7 +2,7 @@
   "presets" : ["es2015"],
   "plugins": [
     ["module-alias", [
-      { "src": "./src/model", "expose": "model" },
+      { "src": "./src/thermal", "expose": "thermal" },
       { "src": "./src/util", "expose": "util" },
       { "src": "./test/testdata", "expose": "testdata" }
     ]]

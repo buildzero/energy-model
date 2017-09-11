@@ -2,7 +2,7 @@ import {
     heatTransferByVentilation,
     airInfiltrationRate,
     mechanicalVentilationRate,
-    naturalVentilationRate} from "model/ventilation";
+    naturalVentilationRate} from "thermal/ventilation";
 
 import {averageIndoorConditions, climate, ventilationCoefficientDetailed, ventilationHeatTransfer} from "testdata/epc";
 

@@ -2,33 +2,33 @@ import _ from "underscore";
 
 import {
     heatFlowRates
-} from "model/internal";
+} from "thermal/internal";
 
 import {
     effectiveSolarCollectingAreaForGlazedElement,
     effectiveSolarCollectingAreaForOpaqueElement,
     solarHeatFlowRateForElement,
     thermalRadiationToSky
-} from "model/solar";
+} from "thermal/solar";
 
 import {
     heatTransferByTransmission, 
     heatTransferByTransmissionCoefficient
-} from "model/transmission";
+} from "thermal/transmission";
 
 import {
     heatTransferByVentilation,
     mechanicalVentilationRate,
     naturalVentilationRate,
     airInfiltrationRate
-} from "model/ventilation";
+} from "thermal/ventilation";
 
 import {
     dimensionlessNumericalParameter,
     buildingTimeConstant,
     gainUtilizationFactor,
     lossUtilizationFactor
-} from "model/dynamic_parameters";
+} from "thermal/dynamic_parameters";
 
 import {internalHeatCapacityByType, thermalMass, vsite, heatRecoveryEfficiency, windowOpeningAngleCk} from "util/building";
 import {surfaceHeatResistence} from "util/climate";

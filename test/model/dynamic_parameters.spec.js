@@ -3,7 +3,7 @@ import {
     buildingTimeConstant,
     gainUtilizationFactor,
     lossUtilizationFactor
-} from "model/dynamic_parameters";
+} from "thermal/dynamic_parameters";
 
 import {
     buildingHeatCapacity,

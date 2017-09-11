@@ -5,7 +5,7 @@ import {
     heatGainInternal,
     heatGainSolar,
     indoorConditions
-} from "model/model";
+} from "thermal/model";
 
 import { MONTHS } from "util/schedule";
 
