@@ -1,5 +1,5 @@
 import _ from "underscore";
-import suncalc from "suncalc";
+// import suncalc from "suncalc";
 
 
 function roundNumber(number, precision) {
@@ -111,38 +111,38 @@ export function dayAngle(dayOfYear) {
 // calculate the representative position of the sun for a given hour of the day in a specified location
 // this should use the midpoint of the hour when the sun is up, except during sunrise and sunset hours
 // in which case it should use the midpoint between the start/end of the hour and sunrise/sunset times.
-export function hourlySolarPositions(year, month, day, latitude, longitude) {
-    // basic solar times for the given day
-    let solarTimes = suncalc.getTimes(new Date(year, month - 1, day, 12, 0, 0), latitude, longitude);
+// export function hourlySolarPositions(year, month, day, latitude, longitude) {
+//     // basic solar times for the given day
+//     let solarTimes = suncalc.getTimes(new Date(year, month - 1, day, 12, 0, 0), latitude, longitude);
 
-    let positions = new Array(24);
-    for (let i=0; i < 24; i++) {
-        let hourStart = new Date(year, month-1, day, i, 0, 0, 0);
-        let hourEnd = new Date(year, month-1, day, i, 59, 59, 999);
-        let hourSolarMidpoint = new Date(year, month-1, day, i, 30, 0, 0);
-        let isDaylight = false;
+//     let positions = new Array(24);
+//     for (let i=0; i < 24; i++) {
+//         let hourStart = new Date(year, month-1, day, i, 0, 0, 0);
+//         let hourEnd = new Date(year, month-1, day, i, 59, 59, 999);
+//         let hourSolarMidpoint = new Date(year, month-1, day, i, 30, 0, 0);
+//         let isDaylight = false;
 
-        if (solarTimes.sunrise < hourEnd && solarTimes.sunset > hourStart) {
-            // sun is up for some portion of this hour
-            isDaylight = true;
+//         if (solarTimes.sunrise < hourEnd && solarTimes.sunset > hourStart) {
+//             // sun is up for some portion of this hour
+//             isDaylight = true;
 
-            let sunlightTimeMs = 0;
-            if (solarTimes.sunrise > hourStart) {
-                // sunrise hour
-                sunlightTimeMs = hourEnd - solarTimes.sunrise;
-                hourSolarMidpoint = new Date(year, month-1, day, i, solarTimes.sunrise.getMinutes() + (sunlightTimeMs/60000)/2, 0, 0);
+//             let sunlightTimeMs = 0;
+//             if (solarTimes.sunrise > hourStart) {
+//                 // sunrise hour
+//                 sunlightTimeMs = hourEnd - solarTimes.sunrise;
+//                 hourSolarMidpoint = new Date(year, month-1, day, i, solarTimes.sunrise.getMinutes() + (sunlightTimeMs/60000)/2, 0, 0);
 
-            } else if (solarTimes.sunset < hourEnd) {
-                // sunset hour
-                sunlightTimeMs = solarTimes.sunset - hourStart;
-                hourSolarMidpoint = new Date(year, month-1, day, i, (sunlightTimeMs/60000)/2, 0, 0);
-            }
+//             } else if (solarTimes.sunset < hourEnd) {
+//                 // sunset hour
+//                 sunlightTimeMs = solarTimes.sunset - hourStart;
+//                 hourSolarMidpoint = new Date(year, month-1, day, i, (sunlightTimeMs/60000)/2, 0, 0);
+//             }
 
-        }
+//         }
 
-        positions[i] = suncalc.getPosition(hourSolarMidpoint, latitude, longitude);
-        positions[i].isDaylight = isDaylight;
-    }
+//         positions[i] = suncalc.getPosition(hourSolarMidpoint, latitude, longitude);
+//         positions[i].isDaylight = isDaylight;
+//     }
 
-    return positions;
-}
+//     return positions;
+// }
