@@ -1,7 +1,15 @@
 import * as math from "util/math";
 
 
-const days_per_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+/*  =================================================================================
+    Calculate the monthly output of a Photovoltaic array (kWh) over a single year 
+    given a specific latitude, irradiance data, and array/module characteristics.
+
+    Provided by Christopher Gronbeck (susdesign.com) for BuildZero.org, Nov. 22, 2017
+    ================================================================================= */
+
+
+const DAYS_PER_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const month_elapsed_days = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 const default_day_of_month = 15;
 const average_extraterrestrial_radiation = 1367;
@@ -9,52 +17,37 @@ const ground_reflectance = 0.2;
 
 
 export function energyDelivered(latitude, climateData, pvSettings) {
+    
+    // simply apply our monthly calcs and collect the results in an array
+    return DAYS_PER_MONTH.map((daysInMonth, month) => {
+        return energyDeliveredForMonth(month, daysInMonth, latitude, climateData[month], pvSettings);
+    });
+}
+
+
+function energyDeliveredForMonth(month, daysInMonth, latitude, climateData, pvSettings) {
+    let { ghi, dhi, dni } = climateData;
     let { azimuth, tilt, nominalPower, numModules, systemLosses } = pvSettings;
 
-    let results = new Array(12);
-    days_per_month.forEach((daysInMonth, month) => {
-        let { ghi, dhi, dni } = climateData[month];
+    // get total daily irradiance (we do this for a single representative day in the given month)
+    let dailyIrradiance = 0;
+    for (let hour = 0; hour < 24; hour++) {
+        dailyIrradiance += Calculate_Surface_Irradiance(month, hour, latitude, ghi[hour], dhi[hour], dni[hour], azimuth, tilt) / 1000;
+    }
 
-        // ---------------------------------------------
-        // get hourly irradiance
-        // ---------------------------------------------
-        let daily_irradiance_kwh = 0;
-        for (let hour = 0; hour < 24; hour++) {
-            daily_irradiance_kwh += Calculate_Surface_Irradiance(month, hour, latitude, ghi[hour], dhi[hour], dni[hour], azimuth, tilt) / 1000;
-        }
-    
-        // ---------------------------------------------
-        // calculate module power at design temperature
-        // ---------------------------------------------
-    
-        let daily_kwh_per_module = daily_irradiance_kwh * (nominalPower / 1000);
-    
-        // ---------------------------------------------
-        // correct for cell temperature
-        // ---------------------------------------------
-    
-        // future enhancement
-    
-        // ---------------------------------------------
-        // correct for systems losses
-        // ---------------------------------------------
-    
-        daily_kwh_per_module *= (1 - systemLosses);
-    
-        // ---------------------------------------------
-        // multiply by number of modules
-        // ---------------------------------------------
-    
-        const daily_array_kwh = daily_kwh_per_module * numModules;
-    
-        // ---------------------------------------------
-        // multiply by days per month
-        // ---------------------------------------------
-    
-        results[month] = daily_array_kwh * daysInMonth;
-    });
+    // calculate module power at design temperature
+    let dailyEnergyPerModule = dailyIrradiance * (nominalPower / 1000);
 
-    return results;
+    // TODO: correct for cell temperature
+
+    // correct for systems losses
+    dailyEnergyPerModule *= (1 - systemLosses);
+
+    // multiply by number of modules
+    const dailyEnergyForArray = dailyEnergyPerModule * numModules;
+
+    // multiply by days per month
+    return dailyEnergyForArray * daysInMonth;
 }
 
 
