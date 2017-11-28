@@ -10,8 +10,8 @@ let pvCases = [
         settings: {
             nominalPower: 300,  // module watts output at 1,000 w/m2 irradiance
             numModules: 5,  // integer >= 1
-            azimuth: 0,  // -180 (east) to 180 (west) degrees, 0 = south
-            tilt: 40,  // degrees tilt from horizontal
+            azimuth: 180,  // degrees clockwise from north (0 to 360)
+            tilt: 40,  // degrees tilt from horizontal (0 to 90)
             systemLosses: 0.10   // 0.00 to 1.00 (e.g., 0.10 = 10% balance-of-system losses)
         },
         climate: [
