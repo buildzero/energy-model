@@ -18,6 +18,11 @@ const ground_reflectance = 0.2;
 
 export function energyDelivered(latitude, climateData, pvSettings) {
     
+    if (pvSettings.numModules < 1) {
+        // no energy delivered if there are no modules
+        return DAYS_PER_MONTH.map(v => 0);
+    }
+
     // simply apply our monthly calcs and collect the results in an array
     return DAYS_PER_MONTH.map((daysInMonth, month) => {
         return energyDeliveredForMonth(month, daysInMonth, latitude, climateData[month], pvSettings);
@@ -87,53 +92,27 @@ function Calculate_Surface_Irradiance(month, hour, latitude, ghi, dhi, dni, azim
     // calculate azimuth angle
     // ---------------------------------------------
     let azimuth_angle;
+    // azimuth represented as degrees clockwise from north
+    // if solar noon, azimuth is 0 or 180 degrees (avoids potential trig errors)
     if (hour_angle == 0) {
-
-        if (latitude >= declination) azimuth_angle = 0;
-
-        else azimuth_angle = 180;
+        if (latitude >= declination) azimuth_angle = 180;
+        else azimuth_angle = 0;
     }
-
+    // if not solar noon
     else {
-
         azimuth_angle = math.ArcCosine(((math.Sine(altitude_angle) * math.Sine(latitude)) - math.Sine(declination)) / (math.Cosine(altitude_angle) * math.Cosine(latitude)));
+        
+        if (hour_angle < 0) { azimuth_angle = azimuth_angle * -1; }
+
+        // add 180 to convert to degrees clockwise from north
+        azimuth_angle += 180;
     }
-
-    if (hour_angle < 0) {
-
-        azimuth_angle = azimuth_angle * -1;
-    }
-
-    // ---------------------------------------------
-    // convert module orientation
-    // ---------------------------------------------
-
-    // convert from deg relative to N/S to deg clockwise from south
-
-    // northern hemisphere
-    let normalized_module_orientation;
-    if (latitude >= 0) {
-
-        if (azimuth > 0) normalized_module_orientation = azimuth;
-
-        else normalized_module_orientation = 360 + azimuth;
-    }
-
-    // southern hemisphere
-
-    else {
-
-        if (azimuth > 0) normalized_module_orientation = 180 - azimuth;
-
-        else normalized_module_orientation = 180 - azimuth;
-    }
-
 
     // ---------------------------------------------
     // calculate surface-solar azimuth
     // ---------------------------------------------
 
-    let solar_surface_azimuth = azimuth_angle - normalized_module_orientation;
+    let solar_surface_azimuth = azimuth_angle - azimuth;
 
     if (solar_surface_azimuth > 180) solar_surface_azimuth -= 360;
     if (solar_surface_azimuth < -180) solar_surface_azimuth += 360;
@@ -150,7 +129,6 @@ function Calculate_Surface_Irradiance(month, hour, latitude, ghi, dhi, dni, azim
     // ---------------------------------------------
     let irradiance_direct_surface;
     if (angle_of_incidence < 90) irradiance_direct_surface = dni * math.Cosine(angle_of_incidence);
-
     else irradiance_direct_surface = 0;
 
     // ---------------------------------------------
