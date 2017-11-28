@@ -425,9 +425,11 @@ export function heatGainSolar(month, climate, walls, windows) {
 
     // WINDOWS - iterate over all window definitions and calculate solar gains
     let windowGains = windows.map(function(win) {
+        const windowShadeReductionFaction = win.global_shade_reduction_factor || globalShadeReductionFactor;
+
         // NOTE: we can make a total shade reduction coefficient by multiplying
         //       the temporary shade reduction by the global shade reduction
-        let shadeReductionFactor = globalShadeReductionFactor * win.reduction_factor_Z_for_temporary;
+        let shadeReductionFactor = windowShadeReductionFaction * win.reduction_factor_Z_for_temporary;
 
         // TODO: window frame area fraction is 0.2 for heating-dominated climates
         //       and 0.3 for cooling-dominated climates per 11.4.5
