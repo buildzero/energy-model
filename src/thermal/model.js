@@ -425,7 +425,7 @@ export function heatGainSolar(month, climate, walls, windows) {
 
     // WINDOWS - iterate over all window definitions and calculate solar gains
     let windowGains = windows.map(function(win) {
-        const windowShadeReductionFaction = win.global_shade_reduction_factor || globalShadeReductionFactor;
+        const windowShadeReductionFaction = _.isNumber(win.global_shade_reduction_factor) ? win.global_shade_reduction_factor : globalShadeReductionFactor;
 
         // NOTE: we can make a total shade reduction coefficient by multiplying
         //       the temporary shade reduction by the global shade reduction
